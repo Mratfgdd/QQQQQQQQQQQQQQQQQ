@@ -49,7 +49,9 @@ const Hall = ({ width }) => {
   return (
     <>
       <Canvas gl={{ antialias: true }}>
-        <LoadingManager total={46} />
+        {/* Коментуємо менеджер лічильника файлів: */}
+        {/* <LoadingManager total={46} /> */}
+        
         <Camera fov={fov} position={[1, 1.37, 0]} lookAt={[0, 0, 10]} />
         <Suspense fallback={"Loading.."}>
           <FloorCircle />
@@ -69,7 +71,10 @@ const Hall = ({ width }) => {
         />
       </video>
       <Instructions />
-      <LoadingPage />
+      
+      {/* Коментуємо саму сторінку чорної заставки: */}
+      {/* <LoadingPage /> */}
+      
       <Navbar active='room-1' />
       {/* <Tour
         steps={steps}

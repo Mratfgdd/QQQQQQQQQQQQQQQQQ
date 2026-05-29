@@ -32,27 +32,14 @@ const accordionList = [
     isDoorSelection: false,
     data: floorData,
   },
-  {
-    id: 2,
-    title: "wallPaint",
-    type: "Wall",
-    isDoorSelection: false,
-    data: wallData,
-  },
-  {
-    id: 3,
-    title: "doors",
-    type: "Door",
-    isDoorSelection: true,
-    data: doorData,
-  },
+  
 ];
 
 const Navbar = ({ active, theme }) => {
   let nav = React.useRef();
   let navIcon = React.useRef();
   const { t, i18n } = useTranslation();
-  const isRussian = i18n.language === "ru" ? true : false;
+  const isUkrainian = i18n.language === "ua" ? true : false;
 
   const [toggleFurniture, setToggleFurniture] = useState(false);
 
@@ -144,16 +131,16 @@ const Navbar = ({ active, theme }) => {
           }}
         >
           <LanguageButton
-            onClick={() => changeLanguage("uz")}
-            active={!isRussian}
+            onClick={() => changeLanguage("en")}
+            active={!isUkrainian}
           >
-            o'zbekcha
+            англійська
           </LanguageButton>
           <LanguageButton
-            onClick={() => changeLanguage("ru")}
-            active={isRussian}
+            onClick={() => changeLanguage("ua")}
+            active={isUkrainian}
           >
-            русский
+            українська
           </LanguageButton>
         </div>
         <Map />
@@ -196,13 +183,13 @@ const Navbar = ({ active, theme }) => {
         </AccordionWrapper>
         <Contacts>
           <h2>{t("contactsTitle")}</h2>
-          <a className='contact-item' href='mailto:want@home3d.uz'>
+          <a className='contact-item' href='mailto:parket_planet@i.ua'>
             <img src='/assets/images/email.svg' alt='' />
-            <span>want@home3d.uz</span>
+            <span>parket_planet@i.ua</span>
           </a>
-          <a className='contact-item' href='tel:+998 97 721 07 66'>
+          <a className='contact-item' href='tel:+380 67 673  06 70'>
             <img src='/assets/images/call.svg' alt='' />
-            <span>+998 97 721 07 66</span>
+            <span>+380 67 673  06 70</span>
           </a>
         </Contacts>
         <div
@@ -213,9 +200,9 @@ const Navbar = ({ active, theme }) => {
             color: "#ccc",
           }}
         >
-          <p> home3d v0.1 beta</p>
+          <p> </p>
           <p> {t("copyright")}</p>
-          <p> 2020 © Raisense</p>
+          <p> </p>
         </div>
       </NavbarContent>
     </NavbarWrapper>

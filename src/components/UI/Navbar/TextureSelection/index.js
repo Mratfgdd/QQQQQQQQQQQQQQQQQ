@@ -106,18 +106,7 @@ export default function TextureSelection({
               ) : null}
               {doorSelection ? (
                 <DoorItem>
-                  <div className='door-img'>
-                    <img src={item.textureImg} alt='' />
-                  </div>
-                  <div className='info-details'>
-                    <h1>IKEA - 9203</h1>
-                    <p>
-                      <strong> color:</strong> white wood
-                    </p>
-                    <p>
-                      <strong>lock:</strong> german hurtz
-                    </p>
-                  </div>
+                  
                 </DoorItem>
               ) : null}
             </SelectionItem>

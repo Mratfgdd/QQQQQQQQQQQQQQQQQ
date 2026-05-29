@@ -8,6 +8,7 @@ import {
   VideoTexture,
   MeshBasicMaterial,
   GammaEncoding,
+  RepeatWrapping
 } from "three";
 import { useLoader, useThree } from "react-three-fiber";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
@@ -17,26 +18,23 @@ import { useModel } from "../state/Store";
 export default function Model() {
   const { scene, gl } = useThree();
   const { setModel, setScene, setLightMaps } = useModel((state) => state);
-  const loader = new GLTFLoader();
+  
+  const loader = useMemo(() => {
+    const gltfLoader = new GLTFLoader();
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath("/draco-gltf/");
+    gltfLoader.setDRACOLoader(dracoLoader);
+    return gltfLoader;
+  }, []);
+
   const pmremGenerator = new PMREMGenerator(gl);
-  var pngCubeRenderTarget, pngBackground, envMap;
+  var pngCubeRenderTarget, envMap;
   const video = document.getElementById("video");
   const videoTexture = new VideoTexture(video);
   videoTexture.encoding = GammaEncoding;
 
-  let [
-    CoffeeTableMap,
-    CurtainCarpetsMap,
-    DecorMap,
-    ExteriorMap,
-    FramesMap,
-    FurnitureMap,
-    SofaMap,
-    TableMap,
-    TV_ShelfMap,
-    Empty_ExteriorMap,
-    Empty_FurnitureMap,
-  ] = useLoader(TextureLoader, [
+  // 1. КАРТИ ТІНЕЙ (Завантажуємо окремо, вони зазвичай стабільні)
+  const lightMaps = useLoader(TextureLoader, [
     "/assets/textures/AssalomHall/CoffeeTable3.webp",
     "/assets/textures/AssalomHall/CurtainCarpets3.webp",
     "/assets/textures/AssalomHall/Decor2.webp",
@@ -50,7 +48,10 @@ export default function Model() {
     "/assets/textures/AssalomHall/Empty_Furniture.webp",
   ]);
 
-  // let  = textures;
+  const [
+    CoffeeTableMap, CurtainCarpetsMap, DecorMap, ExteriorMap, FramesMap,
+    FurnitureMap, SofaMap, TableMap, TV_ShelfMap, Empty_ExteriorMap, Empty_FurnitureMap
+  ] = lightMaps;
 
   useMemo(() => {
     DefaultLoadingManager.onLoad = () => pmremGenerator.dispose();
@@ -62,144 +63,172 @@ export default function Model() {
 
     setScene(scene);
 
-    const textureLoader = new TextureLoader();
+    // БЕЗПЕЧНЕ ЗАВАНТАЖЕННЯ КОЛЬОРОВИХ ТЕКСТУР
+    // Якщо файл не знайдено, Three.js просто не накладе його, але сцена НЕ стане білою!
+    const texLoader = new TextureLoader();
+    const textures = {};
 
-    textureLoader.load("/assets/environment/hall_envMap.webp", (texture) => {
+    const loadSafe = (key, path, repeatX = 1, repeatY = 1) => {
+      texLoader.load(
+        path,
+        (t) => {
+          t.flipY = false;
+          t.encoding = sRGBEncoding;
+          t.wrapS = RepeatWrapping;
+          t.wrapT = RepeatWrapping;
+          t.repeat.set(repeatX, repeatY);
+          textures[key] = t;
+          console.log(`Текстура завантажена успішно: ${key}`);
+        },
+        undefined,
+        (err) => console.warn(`Пропущено текстуру (мабуть, немає файлу): ${path}`)
+      );
+    };
+
+    // Прописуємо точні назви з твоєї папки
+    loadSafe("floor", "/assets/textures/floor1.jpg", 4, 4);
+    loadSafe("carpet", "/assets/scene_textures/carpet_diffuse_compressed.jpg", 1.5, 1.5);
+    loadSafe("wood", "/assets/scene_textures/Table_wood_compressed.jpg", 1, 1);
+    loadSafe("pillow", "/assets/scene_textures/Pillow_compressed.jpg", 2, 2);
+    loadSafe("mud", "/assets/scene_textures/mud_compressed.jpg", 1, 1);
+    loadSafe("gold", "/assets/scene_textures/Gold Art frame.jpg", 1, 1);
+    loadSafe("flower", "/assets/scene_textures/Flower_compresed.jpg", 1, 1); // Твоя назва з однією 's'
+    loadSafe("coffee_base", "/assets/scene_textures/coffee_base_compressed.jpg", 1, 1);
+    loadSafe("fabric_sofa", "/assets/scene_textures/Fabric004_compressed.jpg", 3, 3); // Пробуємо Fabric004, якщо ні — підхопить дефолт
+    loadSafe("coffee_table_top", "/assets/textures/AssalomHall/CoffeeTable3.webp", 1, 1);
+    // Емвмапа
+    texLoader.load("/assets/environment/hall_envMap.webp", (texture) => {
       texture.encoding = sRGBEncoding;
       pngCubeRenderTarget = pmremGenerator.fromEquirectangular(texture);
-      pngBackground = pngCubeRenderTarget.texture;
-      texture.dispose();
-
       envMap = pngCubeRenderTarget.texture;
+      texture.dispose();
     });
-
-    pmremGenerator.compileEquirectangularShader();
 
     gl.toneMapping = ACESFilmicToneMapping;
     gl.toneMappingExposure = 4;
     gl.outputEncoding = sRGBEncoding;
     gl.physicallyCorrectLights = true;
-    // Optional: Provide a DRACOLoader instance to decode compressed mesh data
-    var dracoLoader = new DRACOLoader();
-    dracoLoader.setDecoderPath("/draco-gltf/");
-    loader.setDRACOLoader(dracoLoader);
 
-    ExteriorMap.flipY = false;
-    SofaMap.flipY = false;
-    DecorMap.flipY = false;
-    CurtainCarpetsMap.flipY = false;
-    FramesMap.flipY = false;
-    CoffeeTableMap.flipY = false;
-    TV_ShelfMap.flipY = false;
-    TableMap.flipY = false;
-    FurnitureMap.flipY = false;
+    lightMaps.forEach(t => { if(t) t.flipY = false; });
 
+    // Завантаження самої 3D моделі кімнати
     loader.load(
-      // resource URL
-      "/Hall_v11.gltf",
-      // called when the resource is loaded
+      "/final2.glb",
       function (gltf) {
         setModel(gltf.scene);
         scene.add(gltf.scene);
 
         gltf.scene.traverse((o) => {
-          if (o.isMesh) {
-            console.log(o.name);
-            // o.material.envMap = envMap;
+          if (o.isMesh && o.material) {
+            
+            o.material.envMap = envMap;
             o.material.envMapIntensity = 0.2;
-            o.material.lightMapIntensity = 2;
+            o.material.lightMapIntensity = 1.8;
 
-            if (o.name.includes("Interior_Chandeliers")) {
-              o.material.envMap = envMap;
-              o.material.envMapIntensity = 1;
-              // o.material.lightMap = ChandeliersMap;
-              // o.material.lightMapIntensity = 2;
-            } else if (o.name.includes("CoffeeTable")) {
-              o.material.lightMap = CoffeeTableMap;
-              if (o.material.name.includes("CoffeeTable")) {
-                o.material.envMap = envMap;
-                o.material.envMapIntensity = 0.1;
-              }
-            } else if (o.name.includes("CurtainCarpet")) {
-              o.material.lightMap = CurtainCarpetsMap;
-              o.material.lightMapIntensity = 1.5;
-            } else if (o.name.includes("Decor")) {
-              o.material.lightMap = DecorMap;
-              o.material.lightMapIntensity = 1;
-            } else if (o.name.includes("Exterior")) {
+            const nameLower = o.name.toLowerCase();
+            const matLower = o.material.name ? o.material.name.toLowerCase() : "";
+
+            // 1. ПІДЛОГА
+            if (nameLower.includes("floor") || matLower.includes("floor")) {
+              if (textures.floor) o.material.map = textures.floor;
               o.material.lightMap = ExteriorMap;
-            } else if (o.name.includes("Frames")) {
-              o.material.lightMap = FramesMap;
-              o.material.envMap = envMap;
-              o.material.envMapIntensity = 0.3;
-              if (o.material.name.includes("Frame_Image")) {
-                o.material.roughness = 0;
-                o.material.envMapIntensity = 0.3;
-              }
-            } else if (o.name.includes("Sofa")) {
+              o.material.roughness = 0.4;
+            } 
+            
+            // 2. ДИВАН
+            else if (nameLower.includes("sofa") || matLower.includes("sofa")) {
+              if (textures.fabric_sofa) o.material.map = textures.fabric_sofa;
               o.material.lightMap = SofaMap;
-            } else if (o.name.includes("Table")) {
-              o.material.lightMap = TableMap;
-              if (o.material.name.includes("Tables")) {
-                o.material.envMap = envMap;
-                o.material.envMapIntensity = 0.3;
-              }
-              if (o.material.name.includes("Chair_Base")) {
-                o.material.envMap = envMap;
-              }
-              if (o.material.name.includes("Table_Leg_Copper")) {
-                o.material.envMap = envMap;
-                o.material.envMapIntensity = 0.1;
-              }
-            } else if (o.name.includes("TV_Shelf")) {
-              o.material.lightMap = TV_ShelfMap;
-            } else if (o.name.includes("TV_Screen")) {
-              o.material = new MeshBasicMaterial({
-                map: videoTexture,
-              });
+              o.material.roughness = 0.85;
+            } 
 
-              videoTexture.flipY = false;
-            } else if (o.name.includes("Door")) {
-              o.material.lightMap = FurnitureMap;
-            } else if (o.name.includes("Furniture")) {
-              o.material.lightMap = FurnitureMap;
-            } else if (
-              o.name.includes("Dishes") ||
-              o.name.includes("Glass") ||
-              o.name.includes("TV_Strings") ||
-              o.name.includes("Sofa")
-            ) {
-              o.material.envMap = envMap;
-              o.material.envMapIntensity = 0.5;
-              if (o.material.name.includes("Glass")) {
-                o.material.refractionRatio = 0;
-                o.material.envMapIntensity = 1;
+            // ПОДУШКИ
+            else if (nameLower.includes("pillow") || matLower.includes("pillow")) {
+              if (textures.pillow) o.material.map = textures.pillow;
+              o.material.lightMap = SofaMap;
+            }
+            
+            // 3. ПАЛАС / КИЛИМ
+            else if (nameLower.includes("carpet") || matLower.includes("carpet") || nameLower.includes("rug")) {
+              if (textures.carpet) o.material.map = textures.carpet;
+              o.material.lightMap = CurtainCarpetsMap;
+            } 
+            
+            // 4. СТОЛИ Й СТІЛЬЦІ
+            else if (nameLower.includes("table") && !nameLower.includes("coffeetable")) {
+              if (textures.wood) o.material.map = textures.wood;
+              o.material.lightMap = TableMap;
+            } 
+            
+            // 5. ЖУРНАЛЬНИЙ СТОЛИК
+            else if (nameLower.includes("coffeetable") || matLower.includes("coffeetable")) {
+              o.material.lightMap = CoffeeTableMap;
+              
+              if (nameLower.includes("base") || matLower.includes("base")) {
+                if (textures.coffee_base) o.material.map = textures.coffee_base;
+              } else {
+                // Тут ми підставляємо нову текстуру для стільниці столика
+                if (textures.coffee_table_top) {
+                    o.material.map = textures.coffee_table_top;
+                } else if (textures.wood) {
+                    o.material.map = textures.wood;
+                }
               }
             }
-            if (
-              o.material.name.includes("Handle") ||
-              o.material.name.includes("Curtain_Sides")
-            ) {
-              o.material.envMap = envMap;
+            
+            // 6. НОУТБУК
+            else if (nameLower.includes("macbook") || nameLower.includes("laptop")) {
+              o.material.color.setHex(0x2b2b2b); // Space Gray колір прямо в коді
+              o.material.roughness = 0.3;
+              o.material.metalness = 0.8;
+              o.material.lightMap = CoffeeTableMap;
+            }
+
+            // 7. РОСЛИНА / ВАЗОН / ЗЕМЛЯ
+            else if (nameLower.includes("flower") || nameLower.includes("plant") || matLower.includes("plant")) {
+              if (textures.flower) o.material.map = textures.flower;
+              o.material.lightMap = DecorMap;
+            } else if (nameLower.includes("mud") || nameLower.includes("dirt") || nameLower.includes("ground")) {
+              if (textures.mud) o.material.map = textures.mud;
+            }
+            
+            // 8. РАМКИ
+            else if (nameLower.includes("frame") || matLower.includes("frame")) {
+              o.material.lightMap = FramesMap;
+              if (nameLower.includes("gold") || matLower.includes("gold") || matLower.includes("border")) {
+                if (textures.gold) o.material.map = textures.gold;
+                o.material.metalness = 0.6;
+                o.material.roughness = 0.2;
+              }
+            } 
+            
+            // 9. ШТОРИ, СТІНИ, МЕБЛІ
+            else if (nameLower.includes("curtain") || matLower.includes("curtain")) {
+              o.material.lightMap = CurtainCarpetsMap;
+            } else if (nameLower.includes("exterior") || nameLower.includes("wall") || nameLower.includes("ceiling")) {
+              o.material.lightMap = ExteriorMap;
+            } else if (nameLower.includes("furniture") || nameLower.includes("door")) {
+              o.material.lightMap = FurnitureMap;
+            } else if (nameLower.includes("tv_shelf")) {
+              o.material.lightMap = TV_ShelfMap;
+            } else if (nameLower.includes("tv_screen")) {
+              o.material = new MeshBasicMaterial({ map: videoTexture });
+              videoTexture.flipY = false;
+            } else if (nameLower.includes("decor")) {
+              o.material.lightMap = DecorMap;
+            } else if (nameLower.includes("chandelier") || nameLower.includes("glass") || nameLower.includes("dishes")) {
+              o.material.envMapIntensity = 1.0;
+              if (matLower.includes("glass")) o.material.refractionRatio = 0;
             }
           }
         });
       },
-      // called while loading is progressing
-      function (xhr) {
-        console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
-      },
-      // called when loading has errors
+      undefined,
       function (error) {
-        throw error;
-        // console.log("An error happened", error);
+        console.error("Помилка моделі:", error);
       }
     );
   }, []);
-
-  // useMemo(() => {
-
-  // }, []);
 
   return <></>;
 }
