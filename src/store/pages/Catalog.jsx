@@ -276,7 +276,7 @@ export default function Catalog() {
                   <div className="text"><span>Покриття</span><span>Олія / Лак</span></div>
                 </SpecItem>
               </SpecsGrid>
-              <DetailButton onClick={() => history.push('/product/dub-european-nature')}>
+              <DetailButton onClick={() => history.push('/product/oak')}>
                 Детальніше <span>→</span>
               </DetailButton>
             </CardInfoArea>
@@ -306,7 +306,7 @@ export default function Catalog() {
                   <div className="text"><span>Покриття</span><span>Олія / Лак</span></div>
                 </SpecItem>
               </SpecsGrid>
-              <DetailButton onClick={() => history.push('/product/yasen')}>
+              <DetailButton onClick={() => history.push('/product/ash')}>
                 Детальніше <span>→</span>
               </DetailButton>
             </CardInfoArea>
@@ -336,7 +336,7 @@ export default function Catalog() {
                   <div className="text"><span>Покриття</span><span>Олія / Лак</span></div>
                 </SpecItem>
               </SpecsGrid>
-              <DetailButton onClick={() => history.push('/product/grab')}>
+              <DetailButton onClick={() => history.push('/product/hornbeam')}>
                 Детальніше <span>→</span>
               </DetailButton>
             </CardInfoArea>

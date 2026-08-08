@@ -20,7 +20,7 @@ import "react-accessible-accordion/dist/fancy-example.css";
 import HomeInfo from "./HomeInfo";
 import TextureSelection from "./TextureSelection";
 import { useModel } from "../../../state/Store";
-import { doorData, floorData, wallData } from "./data";
+import { floorData } from "./data";
 import Button from "../Button";
 import { useTranslation } from "react-i18next";
 

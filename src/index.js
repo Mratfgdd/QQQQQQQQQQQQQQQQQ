@@ -93,7 +93,7 @@ function App() {
           <Switch>
             <Route exact path="/" component={StoreHome} />
             <Route exact path="/catalog" component={StoreCatalog} />
-            <Route exact path="/product/:id" component={StoreProduct} />
+            <Route exact path="/product/:productId" component={StoreProduct} />
             <Route path="/hall" render={(props) => <Hall {...props} />} />
           </Switch> 
         </Suspense>
