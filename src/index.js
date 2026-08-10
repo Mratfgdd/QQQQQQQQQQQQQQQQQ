@@ -17,7 +17,13 @@ import theme from "./utils/theme";
 // Імпорт нових сторінок магазину
 import StoreHome from "./store/pages/Home";
 import StoreCatalog from "./store/pages/Catalog";
-import StoreProduct from "./store/pages/ProductDetail"; 
+import StoreProduct from "./store/pages/ProductDetail";
+import StoreFavorites from "./store/pages/Favorites";
+import StoreCart from "./store/pages/Cart";
+import Toast from "./store/components/Toast";
+import AdminApp from "./store/admin/AdminApp";
+import { loadCatalog, useCatalog } from "./store/data/catalogStore";
+import { useShop } from "./store/state/shopStore";
 
 // Твої існуючі 3D сторінки (Lazy-load)
 const Hall = React.lazy(() => import("./pages/hall"));
@@ -94,20 +100,73 @@ function ScrollController() {
   return null;
 }
 
+/* Одноразове завантаження каталогу з бекенда.
+   Поки відповіді немає — сайт живе на статичних даних, тож нічого не
+   блимає й не ламається, якщо бекенд не запущено. */
+function CatalogLoader() {
+  useEffect(() => {
+    let cancelled = false;
+
+    loadCatalog().then(() => {
+      if (cancelled) return;
+      const index = useCatalog.getState().productIndex;
+      /* Товари, які адміністратор видалив, прибираємо з кошика й обраного */
+      useShop.getState().pruneMissing(id => Boolean(index[id]));
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return null;
+}
+
 function App() {
   return (
     <ThemeProvider theme={theme}>
       <GlobalScrollManager />
       <Router>
         <ScrollController /> {/* Тепер React його чітко бачить */}
+        <CatalogLoader />
         <Suspense fallback={<div style={{ color: '#fff', padding: 20 }}>Завантаження...</div>}>
           <Switch>
             <Route exact path="/" component={StoreHome} />
-            <Route exact path="/catalog" component={StoreCatalog} />
+
+            {/* Чотири категорії — одна й та сама сторінка-шаблон із різними даними.
+                /catalog лишаємо як псевдонім паркету: на нього вже посилаються
+                футер і мобільне меню. */}
+            <Route exact path="/catalog" render={() => <StoreCatalog category="parquet" />} />
+            <Route exact path="/parquet" render={() => <StoreCatalog category="parquet" />} />
+            <Route
+              exact
+              path="/parquet-board"
+              render={() => <StoreCatalog category="parquet-board" />}
+            />
+            <Route exact path="/laminate" render={() => <StoreCatalog category="laminate" />} />
+            <Route
+              exact
+              path="/accessories"
+              render={() => <StoreCatalog category="accessories" />}
+            />
+
             <Route exact path="/product/:productId" component={StoreProduct} />
+
+            {/* Обране й кошик: стан спільний (store/state/shopStore.js),
+                тому сторінки завжди показують те саме, що й лічильники в шапці */}
+            <Route exact path="/favorites" component={StoreFavorites} />
+            <Route exact path="/cart" component={StoreCart} />
+            {/* Адмін-панель. Реальний захист — на бекенді: без валідної
+                HttpOnly-сесії кожен /api/admin/* віддає 401. Тут лише
+                показуємо форму входу замість вмісту. */}
+            <Route path="/admin" component={AdminApp} />
+
             <Route path="/hall" render={(props) => <Hall {...props} />} />
-          </Switch> 
+          </Switch>
         </Suspense>
+
+        {/* Сповіщення «Додано до кошика / до обраного» — одне на весь сайт */}
+        <Toast />
       </Router>
     </ThemeProvider>
   );

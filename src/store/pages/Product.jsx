@@ -4,8 +4,8 @@ import Header from '../components/Header';
 import { media } from '../utils/responsive';
 
 const PageWrapper = styled.div`
-  background-color: #ece6df; /* Твій новий преміальний світлий фон */
-  color: #333333;            /* Темний текст для читабельності на світлому */
+  background-color: var(--pp-bg-deep); /* Твій новий преміальний світлий фон */
+  color: var(--pp-text-mid);            /* Темний текст для читабельності на світлому */
   min-height: 100vh;
   width: 100%;
   max-width: 100%;
@@ -42,7 +42,7 @@ const MainContent = styled.main`
 const Breadcrumbs = styled.div`
   grid-column: 1 / -1;
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.4); /* Змінено на темний напівпрозорий під світлий фон */
+  color: var(--pp-text-3); /* Змінено на темний напівпрозорий під світлий фон */
   margin-bottom: 10px;
   span { margin: 0 8px; }
 
@@ -78,7 +78,7 @@ const GallerySection = styled.div`
       border-radius: 4px;
       cursor: pointer;
       border: 1px solid rgba(255, 255, 255, 0.1);
-      &:hover { border-color: #b9935a; }
+      &:hover { border-color: var(--pp-accent); }
     }
   }
 
@@ -121,7 +121,7 @@ const ProductHeader = styled.div`
 
   .badge {
     background: rgba(185, 147, 90, 0.15);
-    color: #b9935a;
+    color: var(--pp-accent);
     font-size: 11px;
     padding: 4px 10px;
     border-radius: 4px;
@@ -192,7 +192,7 @@ const SpecsGrid = styled.div`
 
 // Блок Калькулятора підлоги
 const CalculatorBox = styled.div`
-  background-color: #121212;
+  background-color: var(--pp-panel);
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 8px;
   padding: 25px;
@@ -220,13 +220,13 @@ const CalculatorBox = styled.div`
     color: rgba(255, 255, 255, 0.6);
 
     input {
-      background-color: #1a1a1a;
+      background-color: var(--pp-panel-2);
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 4px;
       padding: 10px;
       color: #fff;
       font-size: 14px;
-      &:focus { border-color: #b9935a; outline: none; }
+      &:focus { border-color: var(--pp-accent); outline: none; }
     }
   }
 
@@ -246,7 +246,7 @@ const CalculatorBox = styled.div`
       &.total {
         font-size: 16px;
         color: #fff;
-        span { color: #b9935a; font-size: 18px; }
+        span { color: var(--pp-accent); font-size: 18px; }
       }
     }
   }
@@ -291,10 +291,10 @@ const ActionButtons = styled.div`
   }
 
   .add-to-cart {
-    background-color: #b9935a;
+    background-color: var(--pp-accent);
     color: #fff;
     border: none;
-    &:hover { background-color: #a37f4c; }
+    &:hover { background-color: var(--pp-accent-strong); }
   }
 
   .order-sample {

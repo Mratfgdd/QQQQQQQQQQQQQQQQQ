@@ -10,6 +10,99 @@
   --active: #5288f1;
 }
 
+/* ============================================================
+   ТЕМИ DAY / NIGHT — ЄДИНЕ ДЖЕРЕЛО КОЛЬОРУ ДЛЯ МАГАЗИНУ (2D)
+
+   Денні значення тут — це РІВНО ті кольори, які були захардкоджені
+   в компонентах, тому світла версія виглядає так само, як до змін.
+   Нічні — теплий charcoal, кремова типографіка та золото: атмосфера
+   з референсу Example.jpg, але композиція сайту не змінюється.
+
+   Тему перемикає атрибут data-theme="night" на <html>. 3D-сцена (/hall)
+   цих змінних не використовує, тому лишається незмінною.
+   ============================================================ */
+:root {
+  /* Поверхні */
+  --pp-bg: #f6f3ee;
+  --pp-bg-alt: #f8f6f0;
+  --pp-bg-deep: #ece6df;
+  --pp-bg-cream: #f5efea;
+  --pp-surface: #ffffff;
+  --pp-surface-2: #eae3db;
+  --pp-surface-3: #f7f2ee;
+  --pp-placeholder: #ece5db;
+
+  /* Темні панелі, які лишаються темними в обох темах */
+  --pp-panel: #121212;
+  --pp-panel-2: #1a1a1a;
+
+  /* Текст */
+  --pp-text: #1a1a1a;
+  --pp-ink: #1a1613;
+  --pp-text-mid: #333333;
+  --pp-text-2: #57524e;
+  --pp-text-3: #6f675e;
+
+  /* Акценти */
+  --pp-accent: #b9935a;
+  --pp-accent-strong: #a37f4c;
+  --pp-accent-soft: #c3a279;
+
+  /* Шапка, мобільне меню та футер */
+  --pp-chrome-top: #0f141c;
+  --pp-chrome-bottom: #0a0d14;
+  --pp-chrome-menu: #10151d;
+
+  /* Лінії */
+  --pp-divider: #f0eae4;
+}
+
+:root[data-theme='night'] {
+  --pp-bg: #16120e;
+  --pp-bg-alt: #1b1712;
+  --pp-bg-deep: #100d0a;
+  --pp-bg-cream: #1b1712;
+  --pp-surface: #221d17;
+  --pp-surface-2: #2a241e;
+  --pp-surface-3: #201b16;
+  --pp-placeholder: #2a241e;
+
+  --pp-panel: #1f1a15;
+  --pp-panel-2: #2a241e;
+
+  --pp-text: #f5efea;
+  --pp-ink: #f5efea;
+  --pp-text-mid: rgba(245, 239, 234, 0.86);
+  --pp-text-2: rgba(245, 239, 234, 0.72);
+  --pp-text-3: rgba(245, 239, 234, 0.55);
+
+  --pp-accent: #c9a46a;
+  --pp-accent-strong: #dcbe8a;
+  --pp-accent-soft: #ddbb86;
+
+  --pp-chrome-top: #14100c;
+  --pp-chrome-bottom: #0e0b08;
+  --pp-chrome-menu: #17120e;
+
+  --pp-divider: rgba(245, 239, 234, 0.12);
+}
+
+/* Плавний перехід між темами.
+   Селектор * має нульову специфічність, тому власні transition
+   компонентів (картки, кнопки) лишаються сильнішими й не ламаються. */
+.body-store-mode,
+.body-store-mode *,
+.body-store-mode *::before,
+.body-store-mode *::after {
+  transition: background-color 520ms ease, color 520ms ease, border-color 520ms ease;
+}
+
+/* Під час першого малювання переходів бути не повинно */
+.pp-theme-booting,
+.pp-theme-booting * {
+  transition: none !important;
+}
+
 /* ДОЗВОЛЯЄМО БРАУЗЕРУ СКРОЛИТИ КОНТЕНТ */
 html,
 body {
@@ -17,7 +110,7 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  background-color: #ece6df; /* Світлий luxury-фон за замовчуванням */
+  background-color: var(--pp-bg-deep); /* Світлий luxury-фон / теплий charcoal уночі */
 }
 
 .App {

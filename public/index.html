@@ -22,6 +22,28 @@
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
   <title>Virtual 3D showroom</title>
+
+  <!--
+      Тема виставляється ДО першого малювання, ще до завантаження React,
+      інакше користувач із нічною темою побачив би спалах світлої версії.
+      Клас pp-theme-booting глушить transition на час першого кадру.
+  -->
+  <script>
+    (function () {
+      var root = document.documentElement;
+      root.classList.add('pp-theme-booting');
+      try {
+        if (localStorage.getItem('pp-theme') === 'night') {
+          root.setAttribute('data-theme', 'night');
+        }
+      } catch (e) {
+        /* приватний режим — просто лишаємо денну тему */
+      }
+      window.addEventListener('load', function () {
+        root.classList.remove('pp-theme-booting');
+      });
+    })();
+  </script>
 </head>
 
 <body>

@@ -1,0 +1,5 @@
+parket_planet.db
+.secret
+uploads/
+__pycache__/
+*.pyc

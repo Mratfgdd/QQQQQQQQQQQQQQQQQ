@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import styled, { createGlobalStyle } from 'styled-components';
+import ThemeToggle from './ThemeToggle';
 import { media } from '../utils/responsive';
 
 /* ======================================================
@@ -90,7 +91,7 @@ const Panel = styled.aside`
     max-width: 86vw;
     box-sizing: border-box;
     padding: 12px 18px calc(28px + env(safe-area-inset-bottom, 0px)) 18px;
-    background: linear-gradient(180deg, #10151d 0%, #0a0d14 100%);
+    background: linear-gradient(180deg, var(--pp-chrome-menu) 0%, var(--pp-chrome-bottom) 100%);
     border-left: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: -18px 0 44px rgba(0, 0, 0, 0.45);
     color: #ffffff;
@@ -117,7 +118,7 @@ const PanelHeader = styled.div`
     font-size: 15px;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: #b9935a;
+    color: var(--pp-accent);
   }
 `;
 
@@ -188,6 +189,28 @@ const MenuItem = styled.button`
     color: rgba(255, 255, 255, 0.35);
     font-size: 16px;
   }
+
+  /* Кількість в обраному / кошику поруч із назвою пункту */
+  .count {
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    margin-left: 8px;
+    border-radius: 999px;
+    background-color: var(--pp-accent);
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 20px;
+    text-align: center;
+    box-sizing: border-box;
+  }
+
+  .label-row {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+  }
 `;
 
 const InfoRow = styled.div`
@@ -247,7 +270,7 @@ const CtaButton = styled.button`
   width: 100%;
   min-height: 48px;
   padding: 12px 18px;
-  background-color: #b9935a;
+  background-color: var(--pp-accent);
   color: #ffffff;
   border: none;
   border-radius: 24px;
@@ -260,7 +283,22 @@ const CtaButton = styled.button`
   -webkit-tap-highlight-color: transparent;
 
   &:active {
-    background-color: #a37f4c;
+    background-color: var(--pp-accent-strong);
+  }
+`;
+
+/* Рядок перемикача теми — той самий контрол, що й у шапці */
+const ThemeRow = styled.div`
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+
+  .theme-label {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.82);
   }
 `;
 
@@ -330,7 +368,10 @@ export default function MobileMenu({
                   type="button"
                   onClick={handleNavigate(link.onClick)}
                 >
-                  <span>{link.label}</span>
+                  <span className="label-row">
+                    {link.label}
+                    {link.badge > 0 && <span className="count">{link.badge}</span>}
+                  </span>
                   <span className="chevron">›</span>
                 </MenuItem>
               ))}
@@ -365,6 +406,12 @@ export default function MobileMenu({
             </div>
           </React.Fragment>
         )}
+
+        <SectionTitle>Оформлення</SectionTitle>
+        <ThemeRow>
+          <span className="theme-label">Нічна тема</span>
+          <ThemeToggle />
+        </ThemeRow>
 
         {cta && (
           <CtaButton type="button" onClick={handleNavigate(cta.onClick)}>

@@ -9,8 +9,8 @@ import { media } from '../utils/responsive';
 
 // 1. Головний контейнер з жорстким увімкненням скролу
 const HomeWrapper = styled.div`
-  background-color: #f6f3ee; /* Світло-кремове тло для всього сайту, як на макеті */
-  color: #1a1a1a;
+  background-color: var(--pp-bg); /* Світло-кремове тло для всього сайту, як на макеті */
+  color: var(--pp-text);
   height: 100vh;            /* Рівно на висоту екрану */
   width: 100vw;             /* Рівно на ширину екрану */
   overflow-y: scroll !important; /* Примусовий вертикальний скролл */
@@ -78,7 +78,7 @@ const HeroSection = styled.section`
 `;
 
 const Badge = styled.span`
-  color: #b9935a;
+  color: var(--pp-accent);
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 2px;
@@ -136,7 +136,7 @@ const HeroSubtitle = styled.p`
 `;
 
 const OrderButton = styled.button`
-  background-color: #b9935a;
+  background-color: var(--pp-accent);
   color: #ffffff;
   border: none;
   padding: 15px 35px;
@@ -150,7 +150,7 @@ const OrderButton = styled.button`
   transition: background-color 0.3s, transform 0.2s;
 
   &:hover {
-    background-color: #a37c47;
+    background-color: var(--pp-accent-strong);
     transform: translateY(-2px);
   }
 
@@ -171,7 +171,7 @@ const ReviewBlock = styled.div`
   gap: 10px;
 
   .stars {
-    color: #b9935a;
+    color: var(--pp-accent);
     font-size: 14px;
   }
   .text {
@@ -193,7 +193,7 @@ const ReviewBlock = styled.div`
 // 3. Секція карток категорій (image_c71283.jpg)
 const CategoriesSection = styled.section`
   padding: 80px 80px 100px 80px;
-  background-color: #f6f3ee; /* Преміальна кремова підкладка */
+  background-color: var(--pp-bg); /* Преміальна кремова підкладка */
   max-width: 1440px;
   margin: 0 auto;
   box-sizing: border-box;
@@ -340,7 +340,7 @@ export default function Home() {
           {/* 1. Паркет */}
           <CategoryCard 
             bg="/parquet.jpg" /* Сюди підставиться твоє фото паркету з папки public */
-            onClick={() => history.push('/catalog')}
+            onClick={() => history.push('/parquet')}
           >
             <div className="top-content">
               <h3>Паркет</h3>
@@ -354,7 +354,7 @@ export default function Home() {
           {/* 2. Паркетна дошка */}
           <CategoryCard 
             bg="/board.jpg" /* Твоє фото паркетної дошки з папки public */
-            onClick={() => history.push('/catalog')}
+            onClick={() => history.push('/parquet-board')}
           >
             <div className="top-content">
               <h3>Паркетна дошка</h3>
@@ -368,7 +368,7 @@ export default function Home() {
           {/* 3. Ламінат */}
           <CategoryCard 
             bg="/laminate.jpg" /* Твоє фото ламінату з папки public */
-            onClick={() => history.push('/catalog')}
+            onClick={() => history.push('/laminate')}
           >
             <div className="top-content">
               <h3>Ламінат</h3>
@@ -382,7 +382,7 @@ export default function Home() {
           {/* 4. Аксесуари */}
           <CategoryCard 
             bg="/accessories.jpg" /* Твоє фото аксесуарів з папки public */
-            onClick={() => history.push('/catalog')}
+            onClick={() => history.push('/accessories')}
           >
             <div className="top-content">
               <h3>Аксесуари</h3>

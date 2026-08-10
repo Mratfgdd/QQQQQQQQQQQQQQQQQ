@@ -6,7 +6,7 @@ import { media, TOUCH_TARGET } from '../utils/responsive';
 /**
  * Футер магазину Parket Planet.
  *
- * Палітру не вигадував: це та сама темна підкладка й золотий акцент #b9935a,
+ * Палітру не вигадував: це та сама темна підкладка й золотий акцент,
  * що вже використовує Header, — сторінка отримує симетричне обрамлення.
  *
  * ПОСИЛАННЯ. Реальні маршрути в проєкті зараз лише /, /catalog, /product/:id
@@ -66,7 +66,7 @@ const COLUMNS = [
 ];
 
 const FooterRoot = styled.footer`
-  background: linear-gradient(180deg, #0f141c 0%, #0a0d14 100%);
+  background: linear-gradient(180deg, var(--pp-chrome-top) 0%, var(--pp-chrome-bottom) 100%);
   color: #ffffff;
   font-family: 'Helvetica Neue', sans-serif;
   width: 100%;
@@ -131,7 +131,7 @@ const Column = styled.nav`
     font-weight: 600;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: #b9935a;
+    color: var(--pp-accent);
     margin: 0 0 22px 0;
   }
 
@@ -205,7 +205,7 @@ const Contacts = styled.div`
     font-weight: 600;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: #b9935a;
+    color: var(--pp-accent);
     margin: 0 0 22px 0;
   }
 
@@ -299,7 +299,7 @@ const Social = styled.div`
 
   a:hover,
   a:focus-visible {
-    border-color: #b9935a;
+    border-color: var(--pp-accent);
     background-color: rgba(185, 147, 90, 0.12);
     color: #ffffff;
   }
@@ -323,7 +323,7 @@ const MapBlock = styled.div`
     font-weight: 600;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: #b9935a;
+    color: var(--pp-accent);
     margin: 0 0 22px 0;
   }
 
@@ -358,7 +358,7 @@ const MapBlock = styled.div`
   .map-slot svg {
     width: 26px;
     height: 26px;
-    stroke: #b9935a;
+    stroke: var(--pp-accent);
     fill: none;
     stroke-width: 1.4;
     stroke-linecap: round;
@@ -427,6 +427,19 @@ const BottomBar = styled.div`
     letter-spacing: 0.04em;
   }
 
+  /* Ненав'язливе службове посилання — навмисно дрібне й приглушене */
+  a.admin-link {
+    font-size: 11.5px;
+    letter-spacing: 0.06em;
+    color: rgba(255, 255, 255, 0.28);
+    text-decoration: none;
+    transition: color 0.25s ease;
+
+    &:hover {
+      color: var(--pp-accent);
+    }
+  }
+
   ${media.mobile} {
     margin-top: 28px;
     padding-top: 18px;
@@ -440,6 +453,11 @@ const BottomBar = styled.div`
     /* Слоган на вузькому екрані лише додає зайвий рядок */
     span + span {
       display: none;
+    }
+
+    a.admin-link {
+      width: 100%;
+      font-size: 11px;
     }
   }
 `;
@@ -561,6 +579,9 @@ export default function Footer() {
         <BottomBar>
           <span>© {new Date().getFullYear()} Parket Planet. Усі права захищені.</span>
           <span>Натуральна підлога та професійні паркетні роботи</span>
+          <a className="admin-link" href="/admin">
+            Адмін-панель
+          </a>
         </BottomBar>
       </Inner>
     </FooterRoot>

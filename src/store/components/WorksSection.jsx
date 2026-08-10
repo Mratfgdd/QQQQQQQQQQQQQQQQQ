@@ -166,7 +166,7 @@ const Scene = styled.section`
   position: relative;
   width: 100%;
   height: 240vh;
-  background-color: #f8f6f0;
+  background-color: var(--pp-bg-alt);
   box-sizing: border-box;
 
   ${media.tablet} {
@@ -218,7 +218,7 @@ const Head = styled.header`
     font-size: clamp(32px, 4.2vw, 66px);
     line-height: 1.12;
     letter-spacing: 0.01em;
-    color: #1a1a1a;
+    color: var(--pp-text);
     margin: 0 0 14px 0;
   }
 
@@ -228,7 +228,7 @@ const Head = styled.header`
     font-size: clamp(14px, 1.05vw, 17px);
     line-height: 1.65;
     letter-spacing: 0.03em;
-    color: rgba(26, 26, 26, 0.6);
+    color: var(--pp-text-3);
     margin: 0 auto;
     max-width: 48ch;
   }
@@ -317,7 +317,7 @@ const Card = styled.figure`
     height: calc(var(--pp-card-h) * var(--pp-k, 1));
     border-radius: 16px;
     overflow: hidden;
-    background-color: #ece5db;
+    background-color: var(--pp-placeholder);
     box-shadow: 0 26px 60px rgba(26, 26, 26, 0.16);
   }
 
@@ -339,7 +339,7 @@ const Card = styled.figure`
     line-height: 1.45;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: #57514a;
+    color: var(--pp-text-2);
     opacity: var(--pp-caption, 0);
   }
 

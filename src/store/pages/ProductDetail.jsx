@@ -3,6 +3,8 @@ import styled, { createGlobalStyle } from 'styled-components';
 import { useHistory, useParams } from 'react-router-dom';
 import { PRODUCTS_DATA } from '../data/productsData';
 import MobileMenu, { HamburgerButton } from '../components/MobileMenu';
+import { useCatalog } from '../data/catalogStore';
+import { useShop, selectIsFavorite, selectCartQty } from '../state/shopStore';
 import { media } from '../utils/responsive';
 /* ======================================================
    ВБУДОВАНІ ІКОНКИ (100% сумісність без залежностей)
@@ -106,7 +108,7 @@ const GlobalScrollStyle = createGlobalStyle`
     padding: 0;
     background: linear-gradient(180deg, #1C1815 0%, #2A241E 45%, #3B352E 100%) !important;
     background-attachment: fixed !important;
-    color: #1A1613;
+    color: var(--pp-ink);
   }
 
   /* ── МОБІЛЬНА ВЕРСІЯ ЗА РЕФЕРЕНСОМ (Mobele_version.png) ──
@@ -128,7 +130,7 @@ const PageWrapper = styled.div`
   min-height: 100vh;
   width: 100%;
   background: transparent;
-  color: #1A1613;
+  color: var(--pp-ink);
   display: flex;
   flex-direction: column;
   overflow-y: visible;
@@ -349,8 +351,8 @@ const HeaderIconButton = styled.div`
 `;
 
 const CallRequestBtn = styled.button`
-  background-color: #F5EFEA;
-  color: #1A1613;
+  background: var(--pp-bg-cream);
+  color: var(--pp-ink);
   border: none;
   padding: 10px 22px;
   font-size: 12px;
@@ -359,7 +361,7 @@ const CallRequestBtn = styled.button`
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
-  &:hover { background-color: #ffffff; transform: translateY(-1px); }
+  &:hover { background: var(--pp-surface); transform: translateY(-1px); }
 
   /* У референсі шапка мобільної версії не містить цієї кнопки — її місце
      займає бургер. Сама дія збережена: вона є першим пунктом-CTA
@@ -809,7 +811,7 @@ const VRButtonInGallery = styled.button`
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #EAE3DB;
+    color: var(--pp-surface-2);
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.04em;
@@ -868,8 +870,8 @@ const VRButtonInGallery = styled.button`
    ПРАВА СЕКЦІЯ (КРЕМОВА #F5EFEA)
    ====================================================== */
 const RightInfoWrapper = styled.div`
-  background: #F5EFEA;
-  color: #1A1613;
+  background: var(--pp-bg-cream);
+  color: var(--pp-ink);
   border-radius: 20px;
   padding: 32px;
   display: grid;
@@ -911,7 +913,7 @@ const ProductTitle = styled.h1`
   font-size: 36px;
   font-family: 'Times New Roman', Times, serif;
   font-weight: 400;
-  color: #1A1613;
+  color: var(--pp-ink);
   margin: 0 0 6px 0;
 
   ${media.mobile} {
@@ -925,13 +927,13 @@ const ProductTitle = styled.h1`
 
 const ProductSubtitle = styled.div`
   font-size: 14px;
-  color: #8E8A86;
+  color: var(--pp-text-3);
   margin-bottom: 20px;
 `;
 
 const DescriptionText = styled.p`
   font-size: 14px;
-  color: #57524E;
+  color: var(--pp-text-2);
   line-height: 1.6;
   margin: 0 0 30px 0;
 
@@ -957,7 +959,7 @@ const SpecItem = styled.div`
   flex-direction: column;
   gap: 4px;
   .label { font-size: 11px; color: #A19C98; text-transform: uppercase; }
-  .value { font-size: 14px; font-weight: 600; color: #1A1613; }
+  .value { font-size: 14px; font-weight: 600; color: var(--pp-ink); }
 `;
 
 const ProductActionsBlock = styled.div`
@@ -967,7 +969,7 @@ const ProductActionsBlock = styled.div`
 `;
 
 const PurchaseCard = styled.div`
-  background: #ffffff;
+  background: var(--pp-surface);
   border-radius: 14px;
   padding: 24px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
@@ -975,8 +977,8 @@ const PurchaseCard = styled.div`
   flex-direction: column;
 
   .price-row { display: flex; align-items: baseline; gap: 6px; margin-bottom: 4px; flex-wrap: wrap; }
-  .price-value { font-size: 36px; font-weight: 800; color: #1A1613; }
-  .price-unit { font-size: 14px; color: #57524E; }
+  .price-value { font-size: 36px; font-weight: 800; color: var(--pp-ink); }
+  .price-unit { font-size: 14px; color: var(--pp-text-2); }
   .status { font-size: 12px; color: #588F67; display: flex; align-items: center; gap: 6px; margin-bottom: 20px; font-weight: 500; }
 
   ${media.mobile} {
@@ -987,7 +989,7 @@ const PurchaseCard = styled.div`
 `;
 
 const PrimaryButton = styled.button`
-  background: #C3A279;
+  background: var(--pp-accent-soft);
   color: #ffffff;
   border: none;
   border-radius: 8px;
@@ -1020,7 +1022,7 @@ const PrimaryButton = styled.button`
 
 const SecondaryButton = styled.button`
   background: transparent;
-  color: #1A1613;
+  color: var(--pp-ink);
   border: 1.5px solid #1A1613;
   border-radius: 8px;
   padding: 13px;
@@ -1034,20 +1036,37 @@ const SecondaryButton = styled.button`
   /* Референс: біла кнопка з тонкою світлою рамкою, а не жирна темна обводка */
   ${media.tablet} {
     min-height: 48px;
-    background: #ffffff;
+    background: var(--pp-surface);
     border: 1px solid rgba(26, 22, 19, 0.20);
   }
 `;
 
 const FavoriteLink = styled.div`
   font-size: 13px;
-  color: #57524E;
+  color: var(--pp-text-2);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   cursor: pointer;
-  &:hover { color: #1A1613; }
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.28s ease;
+  &:hover { color: var(--pp-ink); }
+
+  svg {
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), fill 0.28s ease, stroke 0.28s ease;
+  }
+
+  /* Активний стан: серце заливається акцентом і ледь підростає */
+  &.is-favorite {
+    color: var(--pp-accent);
+
+    svg {
+      fill: var(--pp-accent);
+      stroke: var(--pp-accent);
+      transform: scale(1.12);
+    }
+  }
 
   ${media.tablet} {
     min-height: 44px;
@@ -1055,15 +1074,15 @@ const FavoriteLink = styled.div`
 `;
 
 const CalculatorCard = styled.div`
-  background: #ffffff;
+  background: var(--pp-surface);
   border-radius: 14px;
   padding: 20px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
   display: flex;
   flex-direction: column;
 
-  .calc-title { font-size: 14px; font-weight: 700; color: #1A1613; margin-bottom: 2px; }
-  .calc-subtitle { font-size: 11px; color: #8E8A86; margin-bottom: 14px; }
+  .calc-title { font-size: 14px; font-weight: 700; color: var(--pp-ink); margin-bottom: 2px; }
+  .calc-subtitle { font-size: 11px; color: var(--pp-text-3); margin-bottom: 14px; }
 
   ${media.mobile} {
     padding: 18px 16px;
@@ -1079,16 +1098,16 @@ const InputRow = styled.div`
   margin-bottom: 10px;
   gap: 8px;
 
-  label { font-size: 11.5px; color: #57524E; }
+  label { font-size: 11.5px; color: var(--pp-text-2); }
   input {
     width: 60px;
     height: 30px;
     padding: 0 8px;
     border: none;
     border-radius: 6px;
-    background: #EAE3DB;
+    background: var(--pp-surface-2);
     font-size: 12px;
-    color: #1A1613;
+    color: var(--pp-ink);
     text-align: center;
     font-weight: 600;
     outline: none;
@@ -1128,16 +1147,16 @@ const CalculateButton = styled.button`
   ${media.tablet} {
     height: 46px;
     font-size: 14px;
-    background: #ffffff;
-    color: #1A1613;
+    background: var(--pp-surface);
+    color: var(--pp-ink);
     border: 1px solid rgba(26, 22, 19, 0.18);
 
-    &:hover { background: #F7F2EE; opacity: 1; }
+    &:hover { background: var(--pp-surface-3); opacity: 1; }
   }
 `;
 
 const ResultsBlock = styled.div`
-  border-top: 1px solid #F0EAE4;
+  border-top: 1px solid var(--pp-divider);
   padding-top: 10px;
   display: flex;
   flex-direction: column;
@@ -1147,16 +1166,16 @@ const ResultsBlock = styled.div`
     display: flex;
     justify-content: space-between;
     font-size: 12px;
-    color: #57524E;
-    span:last-child { font-weight: 600; color: #1A1613; }
+    color: var(--pp-text-2);
+    span:last-child { font-weight: 600; color: var(--pp-ink); }
   }
 
   .total-line {
     font-size: 13px;
     font-weight: 700;
-    color: #1A1613;
+    color: var(--pp-ink);
     margin-top: 2px;
-    span:last-child { font-size: 14px; color: #1A1613; }
+    span:last-child { font-size: 14px; color: var(--pp-ink); }
   }
 `;
 
@@ -1164,7 +1183,7 @@ const ResultsBlock = styled.div`
    ОБГОРТКА НИЖНЬОГО КОНТЕНТУ (ОДНОРІДНИЙ СВІТЛИЙ ФОН #F5EFEA)
    ====================================================== */
    const LowerContentWrapper = styled.div`
-   background: #F5EFEA;
+   background: var(--pp-bg-cream);
    width: 100%;
    padding: 36px 0 60px 0;
    
@@ -1243,7 +1262,7 @@ const BenefitsBar = styled.div`
      (у макеті 4 колонки на ширині 800px). Пропорційний мобільний еквівалент —
      2 колонки: так само ~145px на пункт, текст лишається читабельним. ── */
   @media (max-width: 1100px) {
-    background: #F5EFEA;
+    background: var(--pp-bg-cream);
     border-top: none;
     border-bottom: none;
     border-radius: 20px;
@@ -1285,14 +1304,14 @@ const BenefitItem = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #1A1613;
+    color: var(--pp-ink);
     background: rgba(26, 22, 19, 0.04);
     flex-shrink: 0;
   }
 
   .text-block { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-  .title { font-size: 13px; font-weight: 600; color: #1A1613; }
-  .subtitle { font-size: 11px; color: #57524E; }
+  .title { font-size: 13px; font-weight: 600; color: var(--pp-ink); }
+  .subtitle { font-size: 11px; color: var(--pp-text-2); }
 
   /* Референс: кружечки іконок мають теплу золотисту обводку (заміряно #B88B66)
      і такий самий колір гліфа — на десктопі вони темні, тож змінюємо
@@ -1305,7 +1324,7 @@ const BenefitItem = styled.div`
       height: 40px;
       border-color: rgba(185, 147, 90, 0.55);
       background: rgba(185, 147, 90, 0.08);
-      color: #B9935A;
+      color: var(--pp-accent);
     }
 
     /* У src/styles.css є глобальне правило для класу .title
@@ -1360,8 +1379,8 @@ const InfoFooterSectionGrid = styled.div`
 `;
 
 const TabsWrapper = styled.div`
-  background: #F5EFEA;
-  color: #1A1613;
+  background: var(--pp-bg-cream);
+  color: var(--pp-ink);
   border-radius: 20px;
   padding: 32px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
@@ -1420,7 +1439,7 @@ const TabTitle = styled.button`
     left: 0;
     width: 100%;
     height: 2px;
-    background: #C3A279;
+    background: var(--pp-accent-soft);
     transform: scaleX(${props => (props.active ? 1 : 0)});
     transition: transform 0.2s ease;
   }
@@ -1435,7 +1454,7 @@ const TabTitle = styled.button`
 
 const TabContent = styled.div`
   font-size: 14px;
-  color: #57524E;
+  color: var(--pp-text-2);
   line-height: 1.75;
   p { margin: 0 0 16px 0; }
 
@@ -1630,7 +1649,7 @@ const FooterColumn = styled.div`
   flex-direction: column;
   gap: 16px;
   min-width: 0;
-  h4 { font-size: 13px; font-weight: 600; text-transform: uppercase; color: #C3A279; margin: 0; }
+  h4 { font-size: 13px; font-weight: 600; text-transform: uppercase; color: var(--pp-accent-soft); margin: 0; }
   ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
   li { font-size: 13px; color: rgba(255, 255, 255, 0.7); cursor: pointer; word-break: break-word; &:hover { color: #ffffff; } }
 
@@ -1659,7 +1678,7 @@ const FooterColumn = styled.div`
       justify-content: center;
       flex-shrink: 0;
       width: 15px;
-      color: #C3A279;
+      color: var(--pp-accent-soft);
     }
   }
 
@@ -1704,8 +1723,22 @@ export default function ProductDetail() {
   // 1. Отримуємо ID товару з URL
   const { productId } = useParams();
 
-  // 2. Витягуємо об'єкт з даними
-  const product = PRODUCTS_DATA[productId] || PRODUCTS_DATA.oak;
+  // 2. Витягуємо об'єкт з даними.
+  //    Спершу дивимось у каталог із бекенда (там актуальні ціни й фото,
+  //    які редагує адмін-панель), і лише потім — у статичний фолбек.
+  const catalogProducts = useCatalog(state => state.products);
+  const catalogIndex = useCatalog(state => state.productIndex);
+  const product =
+    catalogProducts[productId] || PRODUCTS_DATA[productId] || PRODUCTS_DATA.oak;
+
+  /* Обране та кошик — той самий спільний стан, що й у шапці й на картках.
+     Беремо саме product.id, а не productId з URL: якщо адреса невідома,
+     сторінка показує дуб, тож і додавати треба дуб. */
+  const shopId = product.id;
+  const isFavorite = useShop(selectIsFavorite(shopId));
+  const cartQty = useShop(selectCartQty(shopId));
+  const toggleFavorite = useShop(state => state.toggleFavorite);
+  const addToCart = useShop(state => state.addToCart);
 
   // 3. Динамічна галерея зображень
   const galleryImages = product.images || [
@@ -1728,6 +1761,14 @@ export default function ProductDetail() {
 
   const PRICE_PER_M2 = product.pricePerM2;
   const PACK_CAPACITY = product.packSqM;
+
+  /* Усе, що показує сторінка, береться з самого товару — тому будь-яка
+     правка в адмін-панелі одразу видна тут після оновлення каталогу */
+  const productCard = catalogIndex[product.id] || {};
+  const categoryTitle = productCard.categoryTitle || 'Каталог';
+  const categoryPath = productCard.categorySlug ? `/${productCard.categorySlug}` : '/catalog';
+  const productSubtitle = product.shortDescription || categoryTitle;
+  const productSpecs = product.specs || [];
 
   // 🔄 Оновлення галереї та калькулятора при переході між товарами
   useEffect(() => {
@@ -1843,9 +1884,9 @@ export default function ProductDetail() {
         <Breadcrumbs>
           <span onClick={() => history.push('/')}>Головна</span>
           <span className="separator">/</span>
-          <span onClick={() => history.push('/catalog')}>Паркет</span>
+          <span onClick={() => history.push(categoryPath)}>{categoryTitle}</span>
           <span className="separator">/</span>
-          <span className="current">Дуб European Nature</span>
+          <span className="current">{product.title}</span>
         </Breadcrumbs>
 
         {/* ── СІТКА ТОВАРУ ── */}
@@ -1875,7 +1916,7 @@ export default function ProductDetail() {
 
               <MainImage
                 src={galleryImages[activeImg]}
-                alt="Паркетна дошка Дуб European Nature"
+                alt={product.title}
                 onError={handleImageError}
               />
             </MainImageCard>
@@ -1916,22 +1957,18 @@ export default function ProductDetail() {
           <RightInfoWrapper>
             <ProductDescriptionBlock>
               <HitBadge>Хіт продажів</HitBadge>
-              <ProductTitle>Дуб European Nature</ProductTitle>
-              <ProductSubtitle>Натуральний паркет</ProductSubtitle>
+              <ProductTitle>{product.title}</ProductTitle>
+              <ProductSubtitle>{productSubtitle}</ProductSubtitle>
 
-              <DescriptionText>
-                Вишуканий паркет з натурального дуба європейського походження.
-                Теплий натуральний відтінок та виразна текстура деревини створюють
-                атмосферу затишку та елегантності у вашому домі.
-              </DescriptionText>
+              <DescriptionText>{product.description}</DescriptionText>
 
               <SpecsGrid>
-                <SpecItem><span className="label">Порода дерева</span><span className="value">Дуб</span></SpecItem>
-                <SpecItem><span className="label">Сортування</span><span className="value">Nature</span></SpecItem>
-                <SpecItem><span className="label">Покриття</span><span className="value">Матовий лак</span></SpecItem>
-                <SpecItem><span className="label">Товщина</span><span className="value">14 мм</span></SpecItem>
-                <SpecItem><span className="label">Ширина</span><span className="value">160 мм</span></SpecItem>
-                <SpecItem><span className="label">Довжина</span><span className="value">400–2000 мм</span></SpecItem>
+                {productSpecs.map(spec => (
+                  <SpecItem key={spec.label}>
+                    <span className="label">{spec.label}</span>
+                    <span className="value">{spec.value}</span>
+                  </SpecItem>
+                ))}
               </SpecsGrid>
             </ProductDescriptionBlock>
 
@@ -1942,14 +1979,20 @@ export default function ProductDetail() {
                   <span className="price-unit">грн / м²</span>
                 </div>
                 <div className="status"><span>✓</span> В наявності</div>
-                <PrimaryButton>
+                <PrimaryButton type="button" onClick={() => addToCart(shopId)}>
                   <span className="btn-icon"><IconCart size={17} /></span>
-                  Додати в кошик
+                  {cartQty > 0 ? `У кошику · ${cartQty} — додати ще` : 'Додати в кошик'}
                 </PrimaryButton>
-                <SecondaryButton>Замовити зразок</SecondaryButton>
-                <FavoriteLink>
+                <SecondaryButton type="button">Замовити зразок</SecondaryButton>
+                <FavoriteLink
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={isFavorite}
+                  onClick={() => toggleFavorite(shopId)}
+                  className={isFavorite ? 'is-favorite' : ''}
+                >
                   <IconHeart size={14} />
-                  <span>Додати до обраного</span>
+                  <span>{isFavorite ? 'Додано до обраного' : 'Додати до обраного'}</span>
                 </FavoriteLink>
               </PurchaseCard>
 
@@ -2055,19 +2098,12 @@ export default function ProductDetail() {
               </TabHeader>
 
               <TabContent>
-                {activeTab === 'description' && (
-                  <>
-                    <p>
-                      Паркетна дошка з дуба European Nature – це поєднання природної краси та інноваційних технологій виробництва. Кожна дошка має унікальний малюнок деревини та теплий натуральний відтінок.
-                    </p>
-                    <p>
-                      Ідеально підходить для створення затишної атмосфери в будь-якому приміщенні – від класичних інтер'єрів до сучасних мінімалістичних рішень. Матове лакове покриття забезпечує надійний захист від зносу та полегшує догляд.
-                    </p>
-                  </>
-                )}
+                {activeTab === 'description' && <p>{product.description}</p>}
                 {activeTab === 'specs' && (
                   <p>
-                    Детальні характеристики паркету включають сортування типу Nature, товщину зносостійкого шару 3.5 мм, загальну товщину дошки 14 мм, та сумісність з системами підігріву підлоги з максимальною температурою нагріву до 27°C.
+                    {productSpecs.length
+                      ? productSpecs.map(spec => `${spec.label}: ${spec.value}`).join('. ') + '.'
+                      : 'Характеристики цього товару ще не заповнені в адмін-панелі.'}
                   </p>
                 )}
                 {activeTab === 'delivery' && (
