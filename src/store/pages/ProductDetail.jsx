@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import styled, { createGlobalStyle } from 'styled-components';
 import { useHistory, useParams } from 'react-router-dom';
 import { PRODUCTS_DATA } from '../data/productsData';
+import MobileMenu, { HamburgerButton } from '../components/MobileMenu';
+import { media } from '../utils/responsive';
 /* ======================================================
    ВБУДОВАНІ ІКОНКИ (100% сумісність без залежностей)
    ====================================================== */
@@ -53,6 +55,44 @@ const IconShoppingBag = ({ size = 16 }) => (
   </svg>
 );
 
+/* ── Іконки, які є у мобільному референсі (Mobele_version.png).
+   На десктопі вони приховані через CSS, тож десктопна верстка
+   лишається такою самою, як була. ── */
+const IconCart = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="9" cy="20" r="1.4"/>
+    <circle cx="18" cy="20" r="1.4"/>
+    <path d="M2 3h2.2l2.4 11.2a2 2 0 0 0 2 1.6h8.6a2 2 0 0 0 2-1.6L21 7H5"/>
+  </svg>
+);
+
+const IconMapPin = ({ size = 14 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/>
+    <circle cx="12" cy="10" r="3"/>
+  </svg>
+);
+
+const IconPhone = ({ size = 14 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.05 4.2 2 2 0 0 1 4.04 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.03 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>
+  </svg>
+);
+
+const IconMail = ({ size = 14 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="4" width="20" height="16" rx="2"/>
+    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+  </svg>
+);
+
+const IconClock = ({ size = 14 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="9"/>
+    <path d="M12 7v5l3.2 1.9"/>
+  </svg>
+);
+
 /* ======================================================
    ГЛОБАЛЬНИЙ СВІТЛИЙ ГРАДІЄНТ (ОРИГІНАЛЬНИЙ ВЕРХНІЙ ГРАДІЄНТ)
    ====================================================== */
@@ -67,6 +107,20 @@ const GlobalScrollStyle = createGlobalStyle`
     background: linear-gradient(180deg, #1C1815 0%, #2A241E 45%, #3B352E 100%) !important;
     background-attachment: fixed !important;
     color: #1A1613;
+  }
+
+  /* ── МОБІЛЬНА ВЕРСІЯ ЗА РЕФЕРЕНСОМ (Mobele_version.png) ──
+     У референсі фон сторінки — рівний теплий відтінок #6F675E (заміряно
+     піпеткою по лівому полю макета), а не темний градієнт. Усі секції
+     лежать на ньому окремими скругленими картками.
+     background-attachment: fixed додатково прибираємо — на iOS Safari він
+     не підтримується коректно і дає «стрибки» під час скролу. */
+  ${media.tablet} {
+    html, body, #root {
+      background: #6F675E !important;
+      background-attachment: scroll !important;
+      max-width: 100% !important;
+    }
   }
 `;
 
@@ -95,6 +149,36 @@ const HeaderContainer = styled.header`
   position: sticky;
   top: 0;
   z-index: 100;
+
+  /* ── РЕФЕРЕНС: хедер — окрема «плаваюча» темна картка з полями по боках,
+     а не суцільна смуга на всю ширину ── */
+  ${media.tablet} {
+    width: auto;
+    margin: 14px 24px 0 24px;
+    padding: 9px 14px;
+    background: #0A0A0F;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 18px;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
+    top: 10px;
+  }
+
+  ${media.mobile} {
+    margin: 12px 16px 0 16px;
+    padding: 8px 12px;
+    border-radius: 16px;
+  }
+
+  ${media.smallMobile} {
+    margin: 10px 14px 0 14px;
+    padding: 8px 10px;
+    border-radius: 14px;
+  }
+
+  @media (max-width: 360px) {
+    margin: 10px 12px 0 12px;
+    padding: 7px 9px;
+  }
 `;
 
 const LogoSection = styled.div`
@@ -102,8 +186,10 @@ const LogoSection = styled.div`
   align-items: center;
   gap: 10px;
   cursor: pointer;
+  min-width: 0;
 
   .logo-circle {
+    flex-shrink: 0;
     width: 26px;
     height: 26px;
     border: 1.5px solid #c5a880;
@@ -128,6 +214,45 @@ const LogoSection = styled.div`
     color: #ffffff;
     margin: 0;
     text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  /* ── РЕФЕРЕНС: більший круглий емблем-логотип, а напис «PARKET PLANET»
+     розбитий на два рядки. width: min-content робить це надійно — блок
+     звужується до найдовшого слова, тож перенос завжди йде по пробілу ── */
+  ${media.tablet} {
+    gap: 9px;
+
+    .logo-circle {
+      width: 34px;
+      height: 34px;
+      &::after { width: 13px; height: 13px; }
+    }
+
+    h1 {
+      font-size: 14px;
+      line-height: 1.14;
+      letter-spacing: 1.6px;
+      white-space: normal;
+      width: min-content;
+    }
+  }
+
+  ${media.smallMobile} {
+    gap: 8px;
+
+    .logo-circle {
+      width: 30px;
+      height: 30px;
+      &::after { width: 11px; height: 11px; }
+    }
+
+    h1 { font-size: 12.5px; letter-spacing: 1.2px; }
+  }
+
+  @media (max-width: 360px) {
+    .logo-circle { width: 28px; height: 28px; }
+    h1 { font-size: 11.5px; letter-spacing: 1px; }
   }
 `;
 
@@ -142,12 +267,26 @@ const NavLinks = styled.nav`
     transition: color 0.2s;
     &:hover { color: #ffffff; }
   }
+
+  /* 6 текстових посилань не вміщуються — переїжджають у мобільне меню */
+  ${media.tablet} {
+    display: none;
+  }
 `;
 
 const RightHeaderSection = styled.div`
   display: flex;
   align-items: center;
   gap: 20px;
+
+  /* Референс: у шапці стоять пошук, обране, кошик і бургер — рівномірно */
+  ${media.tablet} {
+    gap: 2px;
+  }
+
+  ${media.mobile} {
+    gap: 0;
+  }
 `;
 
 const HeaderIconButton = styled.div`
@@ -174,6 +313,39 @@ const HeaderIconButton = styled.div`
     align-items: center;
     justify-content: center;
   }
+
+  /* Референс: усі чотири іконки лишаються у шапці й на телефоні.
+     Зона натискання тримається щонайменше 38–40px. */
+  ${media.tablet} {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+
+    .cart-badge { top: 3px; right: 2px; }
+  }
+
+  ${media.mobile} {
+    width: 36px;
+    height: 36px;
+  }
+
+  ${media.smallMobile} {
+    width: 32px;
+    height: 32px;
+
+    .cart-badge {
+      top: 1px;
+      right: 0;
+      width: 13px;
+      height: 13px;
+      font-size: 8px;
+    }
+  }
+
+  @media (max-width: 360px) {
+    width: 29px;
+    height: 29px;
+  }
 `;
 
 const CallRequestBtn = styled.button`
@@ -186,7 +358,15 @@ const CallRequestBtn = styled.button`
   border-radius: 20px;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
   &:hover { background-color: #ffffff; transform: translateY(-1px); }
+
+  /* У референсі шапка мобільної версії не містить цієї кнопки — її місце
+     займає бургер. Сама дія збережена: вона є першим пунктом-CTA
+     у мобільному меню. */
+  ${media.tablet} {
+    display: none;
+  }
 `;
 
 const MainContainer = styled.main`
@@ -198,6 +378,28 @@ const MainContainer = styled.main`
   display: flex;
   flex-direction: column;
   gap: 36px;
+
+  /* ── РЕФЕРЕНС: бічні поля ≈3.5% ширини екрана, вертикальні проміжки між
+     картками невеликі. Нижній padding лишається 0 — відступ до наступної
+     секції задає LowerContentWrapper, щоб проміжок був рівно один. ── */
+  @media (max-width: 1100px) {
+    padding: 12px 24px 0 24px;
+    gap: 14px;
+  }
+
+  ${media.mobile} {
+    padding: 12px 16px 0 16px;
+    gap: 12px;
+  }
+
+  ${media.smallMobile} {
+    padding: 10px 14px 0 14px;
+    gap: 10px;
+  }
+
+  @media (max-width: 360px) {
+    padding: 10px 12px 0 12px;
+  }
 `;
 
 const Breadcrumbs = styled.nav`
@@ -213,6 +415,24 @@ const Breadcrumbs = styled.nav`
     &.separator { color: rgba(255, 255, 255, 0.35); cursor: default; }
     &.current { color: rgba(255, 255, 255, 0.95); cursor: default; }
   }
+
+  ${media.tablet} {
+    color: rgba(255, 255, 255, 0.72);
+    padding: 2px 2px 0 2px;
+
+    span.current { color: #ffffff; }
+  }
+
+  ${media.mobile} {
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  ${media.smallMobile} {
+    font-size: 11.5px;
+  }
 `;
 
 const ProductMainGrid = styled.div`
@@ -220,7 +440,10 @@ const ProductMainGrid = styled.div`
   grid-template-columns: 1fr 1fr;
   gap: 32px;
   align-items: stretch;
-  @media (max-width: 1100px) { grid-template-columns: 1fr; }
+  /* minmax(0, 1fr), а не просто 1fr: скорочення «1fr» означає
+     minmax(auto, 1fr), і цей auto-мінімум дозволяє вмісту (широке фото,
+     смуга мініатюр) розпирати колонку ширше за екран. */
+  @media (max-width: 1100px) { grid-template-columns: minmax(0, 1fr); gap: 20px; }
 `;
 
 /* ======================================================
@@ -255,6 +478,28 @@ const MainImageCard = styled.div`
   &:hover ${MainImage} {
     transform: scale(1.03);
   }
+
+  /* ── РЕФЕРЕНС: головне фото — широка «панорамна» картка ≈2:1
+     (у макеті 800×393), а не квадратна ── */
+  ${media.tablet} {
+    aspect-ratio: 1.95 / 1;
+    border-radius: 20px;
+
+    /* Без hover-зуму на тач-екрані */
+    &:hover ${MainImage} {
+      transform: none;
+    }
+  }
+
+  ${media.mobile} {
+    aspect-ratio: 1.9 / 1;
+    border-radius: 18px;
+  }
+
+  ${media.smallMobile} {
+    aspect-ratio: 1.8 / 1;
+    border-radius: 16px;
+  }
 `;
 
 const ImageBadgesOverlay = styled.div`
@@ -266,6 +511,27 @@ const ImageBadgesOverlay = styled.div`
   gap: 10px;
   z-index: 2;
   pointer-events: none;
+
+  ${media.tablet} {
+    top: 16px;
+    left: 16px;
+    right: 16px;
+    gap: 10px;
+  }
+
+  ${media.mobile} {
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    gap: 7px;
+  }
+
+  ${media.smallMobile} {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    gap: 6px;
+  }
 `;
 
 const BadgeItem = styled.div`
@@ -290,8 +556,55 @@ const BadgeItem = styled.div`
     border-radius: 50%;
     background: rgba(0, 0, 0, 0.35);
     backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     border: 1px solid rgba(255, 255, 255, 0.25);
     color: rgba(255, 255, 255, 0.88);
+  }
+
+  /* ── РЕФЕРЕНС: іконки-«кружечки» з теплою золотистою обводкою (заміряно
+     #B47A59) і таким самим кольором гліфа.
+     Текст лишаємо світлим із м'якою тінню: у макеті під бейджами світле
+     фото, а у твоєму реальному /qqq.jpg — темний інтер'єр, тож темний
+     текст із макета там був би нечитабельним. ── */
+  ${media.tablet} {
+    gap: 10px;
+
+    .badge-label {
+      font-size: 12.5px;
+      line-height: 1.3;
+      color: #ffffff;
+      text-shadow: 0 1px 6px rgba(0, 0, 0, 0.75);
+    }
+
+    .avatar-icon {
+      width: 26px;
+      height: 26px;
+      background: rgba(18, 14, 10, 0.42);
+      border: 1px solid rgba(197, 168, 128, 0.85);
+      color: #E0BE93;
+
+      /* Гліф передається пропом size={11} — на мобільному кружечок більший,
+         тож підтягуємо саму іконку через CSS, не чіпаючи десктоп */
+      svg { width: 13px; height: 13px; }
+    }
+  }
+
+  ${media.mobile} {
+    gap: 8px;
+
+    .badge-label { font-size: 11.5px; }
+    .avatar-icon {
+      width: 23px;
+      height: 23px;
+      svg { width: 12px; height: 12px; }
+    }
+  }
+
+  ${media.smallMobile} {
+    gap: 7px;
+
+    .badge-label { font-size: 10.5px; }
+    .avatar-icon { width: 20px; height: 20px; }
   }
 `;
 
@@ -309,6 +622,33 @@ const GalleryBottomPanel = styled.div`
   padding: 12px 16px;
   box-sizing: border-box;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+
+  /* ── РЕФЕРЕНС: суцільна темна смуга (заміряно #1F1A15) під фото, де в ОДИН
+     ряд стоять: стрілка ‹ · мініатюри · пілюля «3D Переглянути в інтер'єрі» ·
+     стрілка ›. Ряд мініатюр при нестачі місця скролиться горизонтально,
+     тож смуга ніколи не переносить елементи і не розпирає сторінку. ── */
+  ${media.tablet} {
+    flex-wrap: nowrap;
+    gap: 10px;
+    padding: 11px 12px;
+    background: #1F1A15;
+    border-color: rgba(255, 255, 255, 0.07);
+    border-radius: 16px;
+
+    /* Скидаємо порядок — усе лишається в природному порядку DOM */
+    > * { order: 0; }
+  }
+
+  ${media.mobile} {
+    gap: 8px;
+    padding: 9px 10px;
+    border-radius: 14px;
+  }
+
+  ${media.smallMobile} {
+    gap: 6px;
+    padding: 8px 8px;
+  }
 `;
 
 const SliderArrow = styled.button`
@@ -334,6 +674,24 @@ const SliderArrow = styled.button`
     color: #ffffff;
     border-color: rgba(255, 255, 255, 0.4);
   }
+
+  ${media.tablet} {
+    width: 34px;
+    height: 34px;
+    font-size: 17px;
+  }
+
+  ${media.mobile} {
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+  }
+
+  ${media.smallMobile} {
+    width: 27px;
+    height: 27px;
+    font-size: 15px;
+  }
 `;
 
 const ThumbnailsRow = styled.div`
@@ -341,6 +699,31 @@ const ThumbnailsRow = styled.div`
   align-items: center;
   gap: 12px;
   flex-grow: 1;
+
+  /* Мініатюри горизонтально скролляться, не ламаючи ширину панелі.
+     flex-basis: 0 обов'язковий — інакше власна ширина ряду мініатюр
+     виштовхувала б сусідні елементи смуги за межі екрана. */
+  ${media.tablet} {
+    flex: 1 1 0;
+    min-width: 0;
+    gap: 9px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    &::-webkit-scrollbar { display: none; }
+  }
+
+  ${media.mobile} {
+    gap: 8px;
+  }
+
+  ${media.smallMobile} {
+    gap: 6px;
+  }
 `;
 
 const ThumbItem = styled.button`
@@ -369,6 +752,27 @@ const ThumbItem = styled.button`
     height: 100%;
     object-fit: cover;
     display: block;
+  }
+
+  /* Референс: активна мініатюра — світла рамка з м'яким сяйвом */
+  ${media.tablet} {
+    width: 56px;
+    height: 56px;
+    border-radius: 10px;
+    scroll-snap-align: start;
+
+    &:hover { transform: none; }
+  }
+
+  ${media.mobile} {
+    width: 50px;
+    height: 50px;
+  }
+
+  ${media.smallMobile} {
+    width: 44px;
+    height: 44px;
+    border-radius: 9px;
   }
 `;
 
@@ -420,6 +824,44 @@ const VRButtonInGallery = styled.button`
     white-space: nowrap;
     line-height: 1.25;
   }
+
+  /* ── РЕФЕРЕНС: компактна пілюля праворуч у тій самій смузі, одразу перед
+     стрілкою «›». Не стискається, щоб текст не ламався. ── */
+  ${media.tablet} {
+    flex: 0 0 auto;
+    margin-left: 0;
+    padding: 5px 14px 5px 5px;
+    gap: 8px;
+    border-radius: 26px;
+    background: rgba(255, 255, 255, 0.06);
+
+    .vr-circle {
+      width: 32px;
+      height: 32px;
+      font-size: 10.5px;
+    }
+
+    .vr-label {
+      font-size: 11px;
+      line-height: 1.2;
+    }
+  }
+
+  ${media.mobile} {
+    padding: 4px 11px 4px 4px;
+    gap: 7px;
+
+    .vr-circle { width: 28px; height: 28px; font-size: 10px; }
+    .vr-label { font-size: 10px; }
+  }
+
+  ${media.smallMobile} {
+    padding: 4px 9px 4px 4px;
+    gap: 6px;
+
+    .vr-circle { width: 25px; height: 25px; font-size: 9px; }
+    .vr-label { font-size: 9px; }
+  }
 `;
 
 /* ======================================================
@@ -434,7 +876,17 @@ const RightInfoWrapper = styled.div`
   grid-template-columns: 1.1fr 0.9fr;
   gap: 28px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-  @media (max-width: 900px) { grid-template-columns: 1fr; }
+  @media (max-width: 900px) { grid-template-columns: minmax(0, 1fr); }
+
+  ${media.mobile} {
+    padding: 22px 18px;
+    border-radius: 16px;
+    gap: 24px;
+  }
+
+  ${media.smallMobile} {
+    padding: 18px 15px;
+  }
 `;
 
 const ProductDescriptionBlock = styled.div`
@@ -461,6 +913,14 @@ const ProductTitle = styled.h1`
   font-weight: 400;
   color: #1A1613;
   margin: 0 0 6px 0;
+
+  ${media.mobile} {
+    font-size: 28px;
+  }
+
+  ${media.smallMobile} {
+    font-size: 24px;
+  }
 `;
 
 const ProductSubtitle = styled.div`
@@ -474,12 +934,22 @@ const DescriptionText = styled.p`
   color: #57524E;
   line-height: 1.6;
   margin: 0 0 30px 0;
+
+  ${media.mobile} {
+    font-size: 13.5px;
+    margin-bottom: 24px;
+  }
 `;
 
 const SpecsGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;
+
+  ${media.mobile} {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 16px 14px;
+  }
 `;
 
 const SpecItem = styled.div`
@@ -504,10 +974,16 @@ const PurchaseCard = styled.div`
   display: flex;
   flex-direction: column;
 
-  .price-row { display: flex; align-items: baseline; gap: 6px; margin-bottom: 4px; }
+  .price-row { display: flex; align-items: baseline; gap: 6px; margin-bottom: 4px; flex-wrap: wrap; }
   .price-value { font-size: 36px; font-weight: 800; color: #1A1613; }
   .price-unit { font-size: 14px; color: #57524E; }
   .status { font-size: 12px; color: #588F67; display: flex; align-items: center; gap: 6px; margin-bottom: 20px; font-weight: 500; }
+
+  ${media.mobile} {
+    padding: 20px 18px;
+
+    .price-value { font-size: 30px; }
+  }
 `;
 
 const PrimaryButton = styled.button`
@@ -522,6 +998,24 @@ const PrimaryButton = styled.button`
   margin-bottom: 10px;
   width: 100%;
   &:hover { background: #B29168; }
+
+  /* Іконка кошика є лише у мобільному референсі — на десктопі приховуємо,
+     тож десктопна кнопка лишається рівно такою, якою була */
+  .btn-icon { display: none; }
+
+  ${media.tablet} {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+
+    .btn-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
 `;
 
 const SecondaryButton = styled.button`
@@ -536,6 +1030,13 @@ const SecondaryButton = styled.button`
   margin-bottom: 14px;
   width: 100%;
   &:hover { background: rgba(0, 0, 0, 0.04); }
+
+  /* Референс: біла кнопка з тонкою світлою рамкою, а не жирна темна обводка */
+  ${media.tablet} {
+    min-height: 48px;
+    background: #ffffff;
+    border: 1px solid rgba(26, 22, 19, 0.20);
+  }
 `;
 
 const FavoriteLink = styled.div`
@@ -547,6 +1048,10 @@ const FavoriteLink = styled.div`
   gap: 6px;
   cursor: pointer;
   &:hover { color: #1A1613; }
+
+  ${media.tablet} {
+    min-height: 44px;
+  }
 `;
 
 const CalculatorCard = styled.div`
@@ -559,6 +1064,12 @@ const CalculatorCard = styled.div`
 
   .calc-title { font-size: 14px; font-weight: 700; color: #1A1613; margin-bottom: 2px; }
   .calc-subtitle { font-size: 11px; color: #8E8A86; margin-bottom: 14px; }
+
+  ${media.mobile} {
+    padding: 18px 16px;
+
+    .calc-subtitle { font-size: 12px; margin-bottom: 16px; }
+  }
 `;
 
 const InputRow = styled.div`
@@ -582,6 +1093,20 @@ const InputRow = styled.div`
     font-weight: 600;
     outline: none;
   }
+
+  ${media.tablet} {
+    margin-bottom: 12px;
+
+    label { font-size: 13px; }
+
+    input {
+      width: 86px;
+      height: 44px;
+      /* 16px обов'язково: менший розмір змушує iOS Safari зумити сторінку
+         при фокусі на полі вводу */
+      font-size: 16px;
+    }
+  }
 `;
 
 const CalculateButton = styled.button`
@@ -597,6 +1122,18 @@ const CalculateButton = styled.button`
   margin-bottom: 14px;
   width: 100%;
   &:hover { opacity: 0.9; }
+
+  /* Референс: «Розрахувати» — світла кнопка з тонкою рамкою (заміряно по
+     макету: заливка ≈ #FAF4F1), а не темна як на десктопі */
+  ${media.tablet} {
+    height: 46px;
+    font-size: 14px;
+    background: #ffffff;
+    color: #1A1613;
+    border: 1px solid rgba(26, 22, 19, 0.18);
+
+    &:hover { background: #F7F2EE; opacity: 1; }
+  }
 `;
 
 const ResultsBlock = styled.div`
@@ -638,8 +1175,26 @@ const ResultsBlock = styled.div`
    align-items: center;
    
    /* Переконайся, що він шар за шаром правильно перекриває чи лягає */
-   position: relative; 
+   position: relative;
    z-index: 1;
+
+   /* ── РЕФЕРЕНС: суцільної світлої підкладки на мобільному немає. «Переваги»,
+      «Таби» та «Консультація» лежать окремими картками просто на фоні
+      сторінки (#6F675E), між ними видно фон. Тому робимо обгортку
+      прозорою, а картки отримують власне тло нижче. ── */
+   @media (max-width: 1100px) {
+     background: transparent;
+     margin-top: 0;
+     padding: 14px 0 0 0;
+   }
+
+   ${media.mobile} {
+     padding: 12px 0 0 0;
+   }
+
+   ${media.smallMobile} {
+     padding: 10px 0 0 0;
+   }
  `;
 
 const LowerContentInner = styled.div`
@@ -650,6 +1205,26 @@ const LowerContentInner = styled.div`
   display: flex;
   flex-direction: column;
   gap: 36px;
+
+  /* Ті самі бічні поля, що й у MainContainer — усі картки стоять по одній лінії */
+  @media (max-width: 1100px) {
+    padding: 0 24px;
+    gap: 14px;
+  }
+
+  ${media.mobile} {
+    padding: 0 16px;
+    gap: 12px;
+  }
+
+  ${media.smallMobile} {
+    padding: 0 14px;
+    gap: 10px;
+  }
+
+  @media (max-width: 360px) {
+    padding: 0 12px;
+  }
 `;
 
 /* ======================================================
@@ -663,13 +1238,44 @@ const BenefitsBar = styled.div`
   border-top: 1px solid rgba(26, 22, 19, 0.12);
   border-bottom: 1px solid rgba(26, 22, 19, 0.12);
   @media (max-width: 1000px) { grid-template-columns: repeat(3, 1fr); }
-  @media (max-width: 600px) { grid-template-columns: repeat(2, 1fr); }
+
+  /* ── РЕФЕРЕНС: «Переваги» — окрема світла скруглена картка на фоні сторінки
+     (у макеті 4 колонки на ширині 800px). Пропорційний мобільний еквівалент —
+     2 колонки: так само ~145px на пункт, текст лишається читабельним. ── */
+  @media (max-width: 1100px) {
+    background: #F5EFEA;
+    border-top: none;
+    border-bottom: none;
+    border-radius: 20px;
+    padding: 20px 18px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.10);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 16px;
+  }
+
+  ${media.mobile} {
+    padding: 18px 16px;
+    gap: 16px 12px;
+  }
+
+  ${media.smallMobile} {
+    border-radius: 18px;
+    padding: 16px 14px;
+    gap: 14px 10px;
+  }
+
+  /* На найвужчих екранах 2 колонки вже стискають підпис до нечитабельного */
+  @media (max-width: 360px) {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
 `;
 
 const BenefitItem = styled.div`
   display: flex;
   align-items: center;
   gap: 14px;
+  min-width: 0;
 
   .icon-wrapper {
     width: 42px;
@@ -684,9 +1290,62 @@ const BenefitItem = styled.div`
     flex-shrink: 0;
   }
 
-  .text-block { display: flex; flex-direction: column; gap: 2px; }
+  .text-block { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
   .title { font-size: 13px; font-weight: 600; color: #1A1613; }
   .subtitle { font-size: 11px; color: #57524E; }
+
+  /* Референс: кружечки іконок мають теплу золотисту обводку (заміряно #B88B66)
+     і такий самий колір гліфа — на десктопі вони темні, тож змінюємо
+     тільки в мобільному діапазоні */
+  ${media.tablet} {
+    gap: 12px;
+
+    .icon-wrapper {
+      width: 40px;
+      height: 40px;
+      border-color: rgba(185, 147, 90, 0.55);
+      background: rgba(185, 147, 90, 0.08);
+      color: #B9935A;
+    }
+
+    /* У src/styles.css є глобальне правило для класу .title
+       (text-align: center та margin-bottom: 24px), яке випадково перехоплює
+       цей className: воно центрує заголовок і відриває його від підпису.
+       Нейтралізуємо тільки в мобільному діапазоні — десктоп лишається як був. */
+    .title {
+      text-align: left;
+      margin-bottom: 0;
+    }
+  }
+
+  ${media.mobile} {
+    /* У вужчій колонці заголовок переноситься на 2–3 рядки, тож іконку
+       вирівнюємо по першому рядку — так пара «іконка + текст» читається
+       як одне ціле, а не «розповзається» по висоті */
+    align-items: flex-start;
+    gap: 9px;
+
+    .icon-wrapper {
+      width: 34px;
+      height: 34px;
+      margin-top: 1px;
+      svg { width: 16px; height: 16px; }
+    }
+    .title { font-size: 12px; line-height: 1.28; }
+    .subtitle { font-size: 10.5px; line-height: 1.32; }
+  }
+
+  ${media.smallMobile} {
+    gap: 9px;
+
+    .icon-wrapper {
+      width: 32px;
+      height: 32px;
+      svg { width: 15px; height: 15px; }
+    }
+    .title { font-size: 12px; }
+    .subtitle { font-size: 10px; }
+  }
 `;
 
 /* ======================================================
@@ -697,7 +1356,7 @@ const InfoFooterSectionGrid = styled.div`
   grid-template-columns: 1.3fr 0.7fr;
   gap: 32px;
   align-items: stretch;
-  @media (max-width: 900px) { grid-template-columns: 1fr; }
+  @media (max-width: 900px) { grid-template-columns: minmax(0, 1fr); gap: 14px; }
 `;
 
 const TabsWrapper = styled.div`
@@ -706,6 +1365,16 @@ const TabsWrapper = styled.div`
   border-radius: 20px;
   padding: 32px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  min-width: 0;
+
+  ${media.mobile} {
+    padding: 20px 18px;
+    border-radius: 16px;
+  }
+
+  ${media.smallMobile} {
+    padding: 18px 14px;
+  }
 `;
 
 const TabHeader = styled.div`
@@ -715,6 +1384,21 @@ const TabHeader = styled.div`
   margin-bottom: 24px;
   overflow-x: auto;
   &::-webkit-scrollbar { display: none; }
+
+  ${media.mobile} {
+    gap: 18px;
+    margin-bottom: 18px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    /* Усі 5 табів не вміщуються у 390px, тож ряд скролиться горизонтально.
+       М'яке згасання праворуч підказує, що далі є ще таби, і прибирає
+       ефект «обрізаної навпіл» літери на краю. */
+    mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
+    padding-right: 12px;
+  }
 `;
 
 const TabTitle = styled.button`
@@ -740,6 +1424,13 @@ const TabTitle = styled.button`
     transform: scaleX(${props => (props.active ? 1 : 0)});
     transition: transform 0.2s ease;
   }
+
+  ${media.mobile} {
+    font-size: 13.5px;
+    min-height: 44px;
+    padding: 0 0 12px 0;
+    flex-shrink: 0;
+  }
 `;
 
 const TabContent = styled.div`
@@ -747,6 +1438,11 @@ const TabContent = styled.div`
   color: #57524E;
   line-height: 1.75;
   p { margin: 0 0 16px 0; }
+
+  ${media.mobile} {
+    font-size: 13.5px;
+    line-height: 1.7;
+  }
 `;
 
 export const ConsultationBanner = styled.div`
@@ -758,7 +1454,16 @@ export const ConsultationBanner = styled.div`
   display: flex;
   align-items: center;
   overflow: hidden;
-  box-sizing: border-border-box;
+  box-sizing: border-box;
+
+  /* На вузькому екрані текст і фото більше не конкурують за одну площину:
+     текст зверху, зображення окремим блоком знизу */
+  ${media.mobile} {
+    flex-direction: column;
+    align-items: stretch;
+    min-height: 0;
+    border-radius: 16px;
+  }
 `;
 
 export const ConsultationContent = styled.div`
@@ -769,6 +1474,13 @@ export const ConsultationContent = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
+
+  ${media.mobile} {
+    order: 1;
+    max-width: 100%;
+    padding: 24px 20px 20px 20px;
+    gap: 12px;
+  }
 `;
 
 export const ConsultationTitle = styled.h3`
@@ -778,6 +1490,10 @@ export const ConsultationTitle = styled.h3`
   font-weight: 400;
   margin: 0;
   line-height: 1.2;
+
+  ${media.mobile} {
+    font-size: 22px;
+  }
 `;
 
 export const ConsultationText = styled.p`
@@ -785,6 +1501,11 @@ export const ConsultationText = styled.p`
   font-size: 14px;
   line-height: 1.4;
   margin: 0;
+
+  ${media.mobile} {
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
 `;
 
 export const ConsultationButton = styled.button`
@@ -802,6 +1523,12 @@ export const ConsultationButton = styled.button`
   &:hover {
     background: #b08759;
   }
+
+  ${media.mobile} {
+    width: 100%;
+    min-height: 48px;
+    font-size: 14px;
+  }
 `;
 
 export const ConsultationImage = styled.img`
@@ -815,6 +1542,18 @@ export const ConsultationImage = styled.img`
 
   mask-image: linear-gradient(to right, transparent 0%, black 45%);
   -webkit-mask-image: linear-gradient(to right, transparent 0%, black 45%);
+
+  ${media.mobile} {
+    order: 2;
+    position: relative;
+    right: auto;
+    top: auto;
+    width: 100%;
+    height: 170px;
+    /* Градієнт розвертаємо: тепер фото м'яко «виростає» з-під тексту зверху */
+    mask-image: linear-gradient(to bottom, transparent 0%, black 55%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 55%);
+  }
 `;
 
 
@@ -829,6 +1568,27 @@ const FooterContainer = styled.footer`
   color: #ffffff;
   width: 100%;
   box-sizing: border-box;
+
+  /* ── РЕФЕРЕНС: футер теж окрема темна скруглена картка з полями по боках,
+     а копірайт під нею — просто на фоні сторінки. Тому сам контейнер
+     робимо прозорим, а темне тло переїжджає на FooterGrid. ── */
+  ${media.tablet} {
+    background: transparent;
+    border-top: none;
+    padding: 14px 24px calc(18px + env(safe-area-inset-bottom, 0px)) 24px;
+  }
+
+  ${media.mobile} {
+    padding: 12px 16px calc(16px + env(safe-area-inset-bottom, 0px)) 16px;
+  }
+
+  ${media.smallMobile} {
+    padding: 10px 14px calc(14px + env(safe-area-inset-bottom, 0px)) 14px;
+  }
+
+  @media (max-width: 360px) {
+    padding: 10px 12px calc(14px + env(safe-area-inset-bottom, 0px)) 12px;
+  }
 `;
 
 const FooterGrid = styled.div`
@@ -837,17 +1597,75 @@ const FooterGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 36px;
-  @media (max-width: 900px) { grid-template-columns: repeat(2, 1fr); }
-  @media (max-width: 500px) { grid-template-columns: 1fr; }
+  @media (max-width: 900px) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
+
+  ${media.tablet} {
+    background: #0B0E14;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 20px;
+    padding: 24px 20px;
+    gap: 22px 18px;
+  }
+
+  ${media.mobile} {
+    padding: 20px 16px;
+    gap: 20px 14px;
+  }
+
+  ${media.smallMobile} {
+    border-radius: 18px;
+    padding: 18px 14px;
+    gap: 18px 10px;
+  }
+
+  /* Нижче 360px дві колонки вже ріжуть довгі пункти на 3 рядки */
+  @media (max-width: 360px) {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
 `;
 
 const FooterColumn = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-width: 0;
   h4 { font-size: 13px; font-weight: 600; text-transform: uppercase; color: #C3A279; margin: 0; }
   ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
-  li { font-size: 13px; color: rgba(255, 255, 255, 0.7); cursor: pointer; &:hover { color: #ffffff; } }
+  li { font-size: 13px; color: rgba(255, 255, 255, 0.7); cursor: pointer; word-break: break-word; &:hover { color: #ffffff; } }
+
+  /* Іконки біля контактів є лише у мобільному референсі — на десктопі
+     ховаємо, тож десктопний футер лишається без змін */
+  .li-icon { display: none; }
+
+  ${media.tablet} {
+    gap: 13px;
+
+    h4 { font-size: 12px; letter-spacing: 0.6px; }
+    ul { gap: 4px; }
+
+    li {
+      min-height: 34px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 13px;
+      line-height: 1.3;
+    }
+
+    .li-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      width: 15px;
+      color: #C3A279;
+    }
+  }
+
+  ${media.smallMobile} {
+    li { font-size: 12.5px; min-height: 32px; gap: 8px; }
+  }
 `;
 
 const FooterBottom = styled.div`
@@ -859,6 +1677,25 @@ const FooterBottom = styled.div`
   justify-content: space-between;
   font-size: 12px;
   color: rgba(255, 255, 255, 0.45);
+
+  /* Референс: копірайт стоїть під темною карткою футера, по центру,
+     просто на фоні сторінки — без розділювальної лінії */
+  ${media.tablet} {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 5px;
+    margin-top: 14px;
+    padding-top: 0;
+    border-top: none;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.62);
+  }
+
+  ${media.mobile} {
+    margin-top: 12px;
+    font-size: 11.5px;
+  }
 `;
 
 export default function ProductDetail() {
@@ -879,6 +1716,7 @@ export default function ProductDetail() {
 
   const [activeImg, setActiveImg] = useState(0);
   const [activeTab, setActiveTab] = useState('description');
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const [length, setLength] = useState(4.0);
   const [width, setWidth] = useState(3.2);
@@ -937,10 +1775,10 @@ export default function ProductDetail() {
         </NavLinks>
 
         <RightHeaderSection>
-          <HeaderIconButton onClick={() => history.push('/search')}>
+          <HeaderIconButton className="secondary" onClick={() => history.push('/search')}>
             <IconSearch size={18} />
           </HeaderIconButton>
-          <HeaderIconButton onClick={() => history.push('/favorites')}>
+          <HeaderIconButton className="secondary" onClick={() => history.push('/favorites')}>
             <IconHeart size={18} />
           </HeaderIconButton>
           <HeaderIconButton onClick={() => history.push('/cart')}>
@@ -950,8 +1788,53 @@ export default function ProductDetail() {
           <CallRequestBtn onClick={() => history.push('/contacts')}>
             Замовити дзвінок
           </CallRequestBtn>
+
+          {/* Видима лише на планшеті/телефоні (CSS) */}
+          <HamburgerButton
+            type="button"
+            onClick={() => setMenuOpen(true)}
+            aria-label="Відкрити меню"
+            aria-expanded={menuOpen}
+          >
+            <span />
+            <span />
+            <span />
+          </HamburgerButton>
         </RightHeaderSection>
       </HeaderContainer>
+
+      <MobileMenu
+        isOpen={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        links={[
+          { label: 'Головна', onClick: () => history.push('/') },
+          { label: 'Паркет', onClick: () => history.push('/catalog') },
+          { label: 'Паркетна дошка', onClick: () => history.push('/catalog') },
+          { label: 'Ламінат', onClick: () => history.push('/catalog') },
+          { label: 'Аксесуари', onClick: () => history.push('/catalog') },
+          { label: 'Про нас', onClick: () => history.push('/about') },
+          { label: 'Контакти', onClick: () => history.push('/contacts') },
+          { label: 'Пошук', onClick: () => history.push('/search') },
+          { label: 'Обране', onClick: () => history.push('/favorites') },
+          { label: '3D Візуалізація', onClick: () => history.push('/hall') }
+        ]}
+        contacts={[
+          {
+            label: 'Телефон',
+            value: '+38 (067) 673 06 70',
+            href: 'tel:+380676730670'
+          },
+          {
+            label: 'E-mail',
+            value: 'parket_planet@i.ua',
+            href: 'mailto:parket_planet@i.ua'
+          }
+        ]}
+        cta={{
+          label: 'Замовити дзвінок',
+          onClick: () => history.push('/contacts')
+        }}
+      />
 
       {/* ── ОСНОВНИЙ КОНТЕНТ (ВЕРХНЯ ЧАСТИНА НА ТЕМНОМУ ГРАДІЄНТІ) ── */}
       <MainContainer>
@@ -1013,13 +1896,15 @@ export default function ProductDetail() {
                     <img src={img} alt={`Мініатюра ${idx + 1}`} onError={handleImageError} />
                   </ThumbItem>
                 ))}
-
-                {/* 3D Кнопка вбудована в рядок мініатюр */}
-                <VRButtonInGallery onClick={() => history.push('/hall')}>
-                  <div className="vr-circle">3D</div>
-                  <span className="vr-label">Переглянути<br/>в інтер'єрі</span>
-                </VRButtonInGallery>
               </ThumbnailsRow>
+
+              {/* 3D кнопка: на десктопі притиснута вправо (margin-left: auto) —
+                  візуально там само, де й була. На телефоні (CSS order) стає
+                  окремим рядком на всю ширину, щоб не тиснути мініатюри. */}
+              <VRButtonInGallery onClick={() => history.push('/hall')}>
+                <div className="vr-circle">3D</div>
+                <span className="vr-label">Переглянути<br/>в інтер'єрі</span>
+              </VRButtonInGallery>
 
               <SliderArrow onClick={() => setActiveImg(prev => prev < galleryImages.length - 1 ? prev + 1 : 0)}>
                 ›
@@ -1057,7 +1942,10 @@ export default function ProductDetail() {
                   <span className="price-unit">грн / м²</span>
                 </div>
                 <div className="status"><span>✓</span> В наявності</div>
-                <PrimaryButton>Додати в кошик</PrimaryButton>
+                <PrimaryButton>
+                  <span className="btn-icon"><IconCart size={17} /></span>
+                  Додати в кошик
+                </PrimaryButton>
                 <SecondaryButton>Замовити зразок</SecondaryButton>
                 <FavoriteLink>
                   <IconHeart size={14} />
@@ -1252,10 +2140,10 @@ export default function ProductDetail() {
           <FooterColumn>
             <h4>Контакти</h4>
             <ul>
-              <li>вул. Наукова, 12, Львів</li>
-              <li>+38 (067) 673 06 70</li>
-              <li>parket_planet@i.ua</li>
-              <li>Пн - Пт: 09:00 - 19:00</li>
+              <li><span className="li-icon"><IconMapPin size={14} /></span>вул. Наукова, 12, Львів</li>
+              <li><span className="li-icon"><IconPhone size={14} /></span>+38 (067) 673 06 70</li>
+              <li><span className="li-icon"><IconMail size={14} /></span>parket_planet@i.ua</li>
+              <li><span className="li-icon"><IconClock size={14} /></span>Пн - Пт: 09:00 - 19:00</li>
             </ul>
           </FooterColumn>
         </FooterGrid>

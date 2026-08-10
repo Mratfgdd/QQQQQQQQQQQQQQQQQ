@@ -45,8 +45,19 @@ const GlobalScrollManager = createGlobalStyle`
     min-height: 100vh !important;
     height: auto !important;
     max-height: none !important;
-    overflow-y: auto !important;
     position: relative !important;
+  }
+
+  /* Скрол-портом документа має бути ТІЛЬКИ html.
+     Якщо overflow-y: auto стоїть ще й на body та #root, вони стають власними
+     скрол-контейнерами — і position: sticky всередині них перестає залипати
+     (саме через це на телефоні «від'їжджала» відео-секція на головній). */
+  html.body-store-mode {
+    overflow-y: auto !important;
+  }
+
+  body.body-store-mode, #root.body-store-mode {
+    overflow-y: visible !important;
   }
 `;
 

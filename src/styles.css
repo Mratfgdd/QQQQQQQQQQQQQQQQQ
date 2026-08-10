@@ -197,3 +197,54 @@ p {
     display: block;
   }
 }
+
+/* ============================================================
+   RESPONSIVE — БАЗОВІ ГЛОБАЛЬНІ ПРАВИЛА ДЛЯ МАГАЗИНУ (2D)
+
+   Клас .body-store-mode проставляється компонентом ScrollController
+   у src/index.js на <html>, <body> та #root для ВСІХ маршрутів,
+   КРІМ /hall. Тому 3D-сцена та її власна мобільна реалізація
+   цих правил не бачать взагалі.
+   ============================================================ */
+
+html.body-store-mode,
+body.body-store-mode {
+  max-width: 100%;
+  /* iOS Safari не «роздуває» шрифти при повороті екрана */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Головний запобіжник від горизонтального скролу на телефоні.
+   Ставимо його САМЕ на html: overflow-x: hidden на body змушує браузер
+   перерахувати overflow-y на auto, body стає скрол-портом і ламає
+   position: sticky у секціях сторінки. */
+html.body-store-mode {
+  overflow-x: hidden;
+}
+
+@supports (overflow: clip) {
+  body.body-store-mode {
+    /* clip, на відміну від hidden, НЕ створює скрол-контейнер,
+       тому sticky усередині залишається робочим */
+    overflow-x: clip;
+  }
+}
+
+/* Планшет і телефон */
+@media (max-width: 1024px) {
+  body.body-store-mode img,
+  body.body-store-mode video {
+    max-width: 100%;
+  }
+
+  /* Довгі слова, e-mail та адреси не розпирають вузький екран */
+  body.body-store-mode h1,
+  body.body-store-mode h2,
+  body.body-store-mode h3,
+  body.body-store-mode h4,
+  body.body-store-mode p {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+  }
+}

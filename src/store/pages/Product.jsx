@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import Header from '../components/Header';
+import { media } from '../utils/responsive';
 
 const PageWrapper = styled.div`
   background-color: #ece6df; /* Твій новий преміальний світлий фон */
   color: #333333;            /* Темний текст для читабельності на світлому */
   min-height: 100vh;
   width: 100%;
+  max-width: 100%;
   position: relative;
   overflow-y: visible !important; /* Дозволяємо браузеру скролити сторінку вниз */
   display: flex;
@@ -26,6 +28,15 @@ const MainContent = styled.main`
     gap: 30px;
     padding: 20px;
   }
+
+  ${media.mobile} {
+    padding: 20px 16px 32px 16px;
+    gap: 24px;
+  }
+
+  ${media.smallMobile} {
+    padding: 16px 12px 28px 12px;
+  }
 `;
 
 const Breadcrumbs = styled.div`
@@ -34,6 +45,11 @@ const Breadcrumbs = styled.div`
   color: rgba(0, 0, 0, 0.4); /* Змінено на темний напівпрозорий під світлий фон */
   margin-bottom: 10px;
   span { margin: 0 8px; }
+
+  ${media.mobile} {
+    line-height: 1.5;
+    span { margin: 0 5px; }
+  }
 `;
 
 // Ліва частина: Галерея зображень
@@ -41,6 +57,7 @@ const GallerySection = styled.div`
   display: flex;
   flex-direction: column;
   gap: 15px;
+  min-width: 0;
 
   .main-img {
     width: 100%;
@@ -53,7 +70,7 @@ const GallerySection = styled.div`
   .thumbs-row {
     display: flex;
     gap: 12px;
-    
+
     img {
       width: 80px;
       height: 60px;
@@ -64,12 +81,39 @@ const GallerySection = styled.div`
       &:hover { border-color: #b9935a; }
     }
   }
+
+  ${media.tablet} {
+    .main-img { height: 380px; }
+  }
+
+  ${media.mobile} {
+    gap: 12px;
+
+    /* Головне фото по ширині екрану з фіксованою пропорцією */
+    .main-img {
+      height: auto;
+      aspect-ratio: 4 / 3;
+    }
+
+    /* Мініатюри скролляться горизонтально, а не ламають ширину сторінки */
+    .thumbs-row {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+
+      &::-webkit-scrollbar { display: none; }
+
+      img { flex-shrink: 0; }
+    }
+  }
 `;
 
 // Права частина: Інфо та Калькулятор
 const InfoSection = styled.div`
   display: flex;
   flex-direction: column;
+  min-width: 0;
 `;
 
 const ProductHeader = styled.div`
@@ -96,6 +140,16 @@ const ProductHeader = styled.div`
   .type {
     font-size: 14px;
     color: rgba(255, 255, 255, 0.5);
+  }
+
+  ${media.mobile} {
+    margin-bottom: 20px;
+
+    h2 { font-size: 28px; }
+  }
+
+  ${media.smallMobile} {
+    h2 { font-size: 24px; }
   }
 `;
 
@@ -128,6 +182,11 @@ const SpecsGrid = styled.div`
       font-weight: 500;
       margin-top: 4px;
     }
+  }
+
+  ${media.mobile} {
+    gap: 16px 14px;
+    margin-bottom: 24px;
   }
 `;
 
@@ -191,6 +250,22 @@ const CalculatorBox = styled.div`
       }
     }
   }
+
+  ${media.mobile} {
+    padding: 20px 18px;
+
+    /* Два поля вводу поруч занадто вузькі на телефоні */
+    .inputs-row {
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .input-group input {
+      min-height: 44px;
+      /* 16px — інакше iOS Safari зумить сторінку при фокусі */
+      font-size: 16px;
+    }
+  }
 `;
 
 const ActionButtons = styled.div`
@@ -206,6 +281,13 @@ const ActionButtons = styled.div`
     cursor: pointer;
     font-weight: 500;
     transition: all 0.3s;
+  }
+
+  ${media.tablet} {
+    button {
+      min-height: 48px;
+      font-size: 14px;
+    }
   }
 
   .add-to-cart {

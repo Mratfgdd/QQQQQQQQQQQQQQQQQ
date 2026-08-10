@@ -2,6 +2,10 @@ import React from 'react';
 import styled from 'styled-components';
 import { useHistory } from 'react-router-dom';
 import Header from '../components/Header';
+import VideoScrollSection from '../components/VideoScrollSection';
+import WorksSection from '../components/WorksSection';
+import Footer from '../components/Footer';
+import { media } from '../utils/responsive';
 
 // 1. Головний контейнер з жорстким увімкненням скролу
 const HomeWrapper = styled.div`
@@ -14,14 +18,30 @@ const HomeWrapper = styled.div`
   position: relative;
   font-family: 'Helvetica Neue', sans-serif;
   box-sizing: border-box;
+
+  /* ── ПЛАНШЕТ / МОБІЛЬНИЙ ──
+     Віддаємо скрол самому документу: вкладений скрол-контейнер на телефоні
+     ламає інерційний скрол iOS та ховання адресного рядка.
+     100vw також прибираємо — саме воно дає горизонтальний скрол. */
+  ${media.tablet} {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-height: 100vh;
+    /* Саме visible на ОБОХ осях: якщо лишити overflow-x: hidden, браузер
+       перерахує overflow-y на auto і контейнер знову стане скрол-портом,
+       через що зламається sticky-хедер. Горизонтальний скрол відсікається
+       глобально на html/body у src/styles.css. */
+    overflow: visible !important;
+  }
 `;
 
 // 2. Банер з ТВОЇМ ОРИГІНАЛЬНИМ зображенням (image_c71357.jpg)
 const HeroSection = styled.section`
   height: 85vh;
   /* Підставляємо пряме посилання на файл з папки public та прибираємо темний градієнт, щоб кімната була світлою */
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0) 80%), 
-              url('/hero-bg.jpg'); 
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0) 80%),
+              url('/hero-bg.jpg');
   background-size: cover;
   background-position: center;
   display: flex;
@@ -31,8 +51,30 @@ const HeroSection = styled.section`
   padding: 0 80px;
   position: relative;
   color: #ffffff;
-  
+
   /* ... весь інший код всередині HeroSection залишається без змін ... */
+
+  ${media.tablet} {
+    padding: 56px 40px;
+    height: auto;
+    min-height: 68vh;
+  }
+
+  ${media.mobile} {
+    /* Трохи темніший градієнт — щоб білий текст читався поверх фото на малому екрані */
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.15) 60%, rgba(0, 0, 0, 0.35) 100%),
+                url('/hero-bg.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: scroll;
+    padding: 48px 20px 56px 20px;
+    min-height: 78vh;
+  }
+
+  ${media.smallMobile} {
+    padding: 40px 16px 48px 16px;
+    min-height: 74vh;
+  }
 `;
 
 const Badge = styled.span`
@@ -42,6 +84,12 @@ const Badge = styled.span`
   letter-spacing: 2px;
   font-weight: 600;
   margin-bottom: 15px;
+
+  ${media.mobile} {
+    font-size: 11px;
+    letter-spacing: 1.6px;
+    margin-bottom: 12px;
+  }
 `;
 
 const HeroTitle = styled.h1`
@@ -53,8 +101,19 @@ const HeroTitle = styled.h1`
   margin: 0 0 25px 0;
   letter-spacing: 0.5px;
 
+  ${media.tablet} {
+    font-size: 44px;
+    max-width: 100%;
+  }
+
   @media (max-width: 768px) {
-    font-size: 38px;
+    font-size: 34px;
+    line-height: 1.2;
+    margin-bottom: 18px;
+  }
+
+  ${media.smallMobile} {
+    font-size: 28px;
   }
 `;
 
@@ -64,6 +123,16 @@ const HeroSubtitle = styled.p`
   max-width: 450px;
   line-height: 1.6;
   margin: 0 0 35px 0;
+
+  ${media.mobile} {
+    font-size: 14px;
+    max-width: 100%;
+    margin-bottom: 28px;
+  }
+
+  ${media.smallMobile} {
+    font-size: 13px;
+  }
 `;
 
 const OrderButton = styled.button`
@@ -84,6 +153,15 @@ const OrderButton = styled.button`
     background-color: #a37c47;
     transform: translateY(-2px);
   }
+
+  ${media.mobile} {
+    width: 100%;
+    max-width: 320px;
+    min-height: 48px;
+    justify-content: center;
+    padding: 14px 24px;
+    font-size: 14px;
+  }
 `;
 
 const ReviewBlock = styled.div`
@@ -100,6 +178,16 @@ const ReviewBlock = styled.div`
     font-size: 12px;
     color: rgba(255, 255, 255, 0.8);
   }
+
+  ${media.mobile} {
+    margin-top: 26px;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    .text {
+      font-size: 11.5px;
+    }
+  }
 `;
 
 // 3. Секція карток категорій (image_c71283.jpg)
@@ -109,9 +197,18 @@ const CategoriesSection = styled.section`
   max-width: 1440px;
   margin: 0 auto;
   box-sizing: border-box;
-  
+  width: 100%;
+
+  ${media.tablet} {
+    padding: 56px 40px 64px 40px;
+  }
+
   @media (max-width: 768px) {
     padding: 40px 20px;
+  }
+
+  ${media.smallMobile} {
+    padding: 32px 16px 40px 16px;
   }
 `;
 
@@ -125,13 +222,14 @@ const CategoriesGrid = styled.div`
   }
   @media (max-width: 650px) {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
 `;
 
 const CategoryCard = styled.div`
   height: 320px;
   border-radius: 24px; /* Закруглені кути як на макеті */
-  background: linear-gradient(to right, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.1) 60%, rgba(0, 0, 0, 0) 100%), 
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.1) 60%, rgba(0, 0, 0, 0) 100%),
               url(${props => props.bg});
   background-size: cover;
   background-position: center;
@@ -172,6 +270,44 @@ const CategoryCard = styled.div`
     display: flex;
     align-items: center;
     gap: 6px;
+  }
+
+  ${media.mobile} {
+    /* Затемнення зверху вниз — текст читається на всю ширину картки */
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.15) 55%, rgba(0, 0, 0, 0.5) 100%),
+                url(${props => props.bg});
+    background-size: cover;
+    background-position: center;
+    height: 220px;
+    border-radius: 18px;
+    padding: 24px 20px;
+
+    /* На тач-екрані hover-«стрибок» тільки заважає */
+    &:hover {
+      transform: none;
+      box-shadow: none;
+    }
+
+    .top-content {
+      h3 {
+        font-size: 22px;
+        margin-bottom: 8px;
+      }
+
+      p {
+        font-size: 12.5px;
+        max-width: 100%;
+      }
+    }
+  }
+
+  ${media.smallMobile} {
+    height: 190px;
+    padding: 20px 16px;
+
+    .top-content h3 {
+      font-size: 20px;
+    }
   }`;
 
 export default function Home() {
@@ -259,6 +395,14 @@ export default function Home() {
 
         </CategoriesGrid>
       </CategoriesSection>
+
+      {/* Scroll-driven cinematic секція: відео + напис «Planeta Parket» */}
+      <VideoScrollSection />
+
+      {/* Scroll-driven композиція «Паркетні роботи» */}
+      <WorksSection />
+
+      <Footer />
     </HomeWrapper>
   );
 }

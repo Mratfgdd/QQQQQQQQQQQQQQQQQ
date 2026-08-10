@@ -2,9 +2,10 @@ import React from 'react';
 import styled from 'styled-components';
 import { useHistory } from 'react-router-dom';
 import Header from '../components/Header';
+import { media } from '../utils/responsive';
 
 const CatalogWrapper = styled.div`
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)), 
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)),
               url('/catalog-hero.jpg');
   background-size: cover;
   background-position: center;
@@ -17,6 +18,22 @@ const CatalogWrapper = styled.div`
   display: flex;
   flex-direction: column;
   overflow: hidden; /* Запобігаємо зайвим зломаним скролам */
+
+  /* ── ПЛАНШЕТ / МОБІЛЬНИЙ ──
+     Знімаємо жорсткий 100vh + overflow:hidden — інакше картки просто
+     обрізаються за межами екрану. Сторінка стає нормально прокручуваною.
+     background-attachment: fixed не працює на iOS і дає «стрибки» — scroll. */
+  ${media.tablet} {
+    height: auto;
+    min-height: 100vh;
+    width: 100%;
+    max-width: 100%;
+    /* visible на обох осях — інакше overflow-y перерахується на auto
+       і контейнер знову стане скрол-портом (ламає sticky-хедер).
+       Горизонтальний скрол відсікається глобально на html/body. */
+    overflow: visible;
+    background-attachment: scroll;
+  }
 `;
 
 const ContentContainer = styled.div`
@@ -30,8 +47,18 @@ const ContentContainer = styled.div`
   flex-direction: column;
   justify-content: space-between; /* Рівномірно розподіляє верх і картки */
 
+  ${media.tablet} {
+    flex: none;
+    justify-content: flex-start;
+    padding: 24px 32px 48px 32px;
+  }
+
   @media (max-width: 768px) {
-    padding: 15px 20px;
+    padding: 20px 20px 40px 20px;
+  }
+
+  ${media.smallMobile} {
+    padding: 16px 16px 32px 16px;
   }
 `;
 
@@ -42,9 +69,18 @@ const TopMeta = styled.div`
   align-items: flex-end;
   margin-bottom: 20px; /* Мінімальний відступ до карток */
   width: 100%;
+
+  ${media.mobile} {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
 `;
 
 const HeaderLeft = styled.div`
+  min-width: 0;
+
   .breadcrumbs {
     font-size: 12px;
     color: rgba(255, 255, 255, 0.5);
@@ -67,12 +103,26 @@ const HeaderLeft = styled.div`
     line-height: 1.4;
     margin: 0;
   }
+
+  ${media.tablet} {
+    h1 { font-size: 32px; }
+  }
+
+  ${media.mobile} {
+    h1 { font-size: 27px; }
+    p { font-size: 12.5px; max-width: 100%; }
+  }
+
+  ${media.smallMobile} {
+    h1 { font-size: 23px; }
+  }
 `;
 
 const SortSelect = styled.div`
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   padding: 8px 18px;
   border-radius: 20px;
   font-size: 12px;
@@ -82,9 +132,20 @@ const SortSelect = styled.div`
   align-items: center;
   gap: 6px;
   transition: border-color 0.3s;
+  white-space: nowrap;
 
   &:hover {
     border-color: rgba(255, 255, 255, 0.5);
+  }
+
+  /* На телефоні — повноцінний touch-контрол на всю ширину */
+  ${media.mobile} {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 18px;
+    justify-content: space-between;
+    font-size: 13px;
+    box-sizing: border-box;
   }
 `;
 
@@ -94,6 +155,20 @@ const ProductsGrid = styled.div`
   gap: 25px;
   flex: 1; /* Сітка забирає весь доступний простір по висоті */
   max-height: calc(100vh - 180px); /* Обмеження, щоб картки не вилітали за екран */
+
+  /* Планшет: 2 колонки, висота більше не обмежена екраном */
+  ${media.tablet} {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    flex: none;
+    max-height: none;
+  }
+
+  /* Телефон: одна колонка — картки не стискаються до нечитабельних */
+  ${media.mobile} {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
 `;
 
 const ProductCard = styled.div`
@@ -113,12 +188,23 @@ const ProductCard = styled.div`
     transform: translateY(-5px);
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
   }
+
+  ${media.tablet} {
+    height: auto;
+    min-height: 0;
+    border-radius: 20px;
+
+    &:hover {
+      transform: none;
+      box-shadow: none;
+    }
+  }
 `;
 
 // Збільшено фото-зону продукту (тепер вона домінує, як на макеті)
 const CardImageArea = styled.div`
   flex: 1; /* Займає максимум місця, роблячи фото великим */
-  background: linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(0,0,0,0.6) 100%), 
+  background: linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(0,0,0,0.6) 100%),
               url(${props => props.bg});
   background-size: cover;
   background-position: center;
@@ -135,31 +221,65 @@ const CardImageArea = styled.div`
     margin: 0;
     line-height: 1.1;
   }
+
+  /* Фіксована пропорція фото замість «розтягнутого» flex:1 */
+  ${media.tablet} {
+    flex: 0 0 auto;
+    height: 240px;
+    padding: 20px;
+
+    h2 { font-size: 28px; }
+  }
+
+  ${media.mobile} {
+    height: 220px;
+  }
+
+  ${media.smallMobile} {
+    height: 180px;
+    padding: 16px;
+
+    h2 { font-size: 25px; }
+  }
 `;
 
 // Стиснута та підтягнута вгору інфо-зона
 const CardInfoArea = styled.div`
-  background: rgba(86, 68, 52, 0.75); 
+  background: rgba(86, 68, 52, 0.75);
   padding: 20px 24px; /* Компактніші відступи */
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   gap: 18px; /* Фіксована відстань до кнопки */
+
+  ${media.mobile} {
+    padding: 18px 18px 20px 18px;
+    gap: 16px;
+  }
+
+  ${media.smallMobile} {
+    padding: 16px 14px 18px 14px;
+  }
 `;
 
 const SpecsGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px 10px; /* Компактна сітка характеристик */
+
+  ${media.smallMobile} {
+    gap: 12px 8px;
+  }
 `;
 
 const SpecItem = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  
-  .icon-wrapper { 
+  min-width: 0;
+
+  .icon-wrapper {
     width: 32px;
     height: 32px;
     background: rgba(255, 255, 255, 0.08);
@@ -186,11 +306,24 @@ const SpecItem = styled.div`
       font-size: 10px; 
       color: rgba(255, 255, 255, 0.5);
     }
-    span:last-child { 
-      font-size: 13px; 
-      font-weight: 400; 
+    span:last-child {
+      font-size: 13px;
+      font-weight: 400;
       color: #ffffff;
       margin-top: 1px;
+    }
+  }
+
+  ${media.smallMobile} {
+    gap: 7px;
+
+    .icon-wrapper {
+      width: 28px;
+      height: 28px;
+    }
+
+    .text span:last-child {
+      font-size: 12.5px;
     }
   }
 `;
@@ -214,6 +347,13 @@ const DetailButton = styled.button`
   &:hover {
     background: rgba(135, 110, 86, 0.9);
     border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  /* Комфортна зона натискання пальцем */
+  ${media.tablet} {
+    min-height: 44px;
+    padding: 12px;
+    font-size: 14px;
   }
 `;
 
