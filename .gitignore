@@ -95,3 +95,4 @@ sw.*
 
 # Локальні файли Vercel CLI
 .vercel
+"yarn.lock" 
