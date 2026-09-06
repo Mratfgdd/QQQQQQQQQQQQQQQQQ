@@ -1,0 +1,64 @@
+# Blueprint для Render.com — бекенд Parket Planet.
+#
+# Створення: Render → New → Blueprint → вибрати цей репозиторій.
+# Render сам прочитає цей файл і підніме сервіс.
+#
+# АРХІТЕКТУРА, під яку зроблено конфіг:
+#   фронтенд  → Vercel  (https://<проєкт>.vercel.app)
+#   бекенд    → Render  (https://<сервіс>.onrender.com)
+#   база      → Postgres (Render / Neon / Supabase)
+#
+# Домени різні, тому кука адмін-сесії має бути SameSite=None; Secure,
+# а CORS — знати точну адресу фронтенда. Обидва пункти нижче.
+
+services:
+  - type: web
+    name: parket-planet-api
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    # PORT видає сама платформа — прошивати число не можна
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      # Підпис сесійного токена. generateValue — Render створить довгий
+      # випадковий ключ сам, і він ніде не засвітиться в репозиторії.
+      - key: PP_SECRET_KEY
+        generateValue: true
+
+      # Рядок підключення до Postgres. sync: false означає «спитати
+      # значення при створенні сервісу» — секрет не лежить у git.
+      #
+      # ВАЖЛИВО: без цієї змінної бекенд впаде на SQLite-файл, а диск
+      # безкоштовного Render не переживає передеплою й засинання —
+      # товари, замовлення та завантажені фото зникали б.
+      - key: PP_DATABASE_URL
+        sync: false
+
+      # Точна адреса фронтенда на Vercel, БЕЗ слеша в кінці.
+      # Кілька адрес — через кому (наприклад, ще й власний домен).
+      - key: PP_ALLOWED_ORIGINS
+        sync: false
+
+      # Фронтенд і бекенд на різних доменах → кука має бути крос-сайтовою
+      - key: PP_COOKIE_SAMESITE
+        value: none
+      - key: PP_COOKIE_SECURE
+        value: "1"
+
+      # Початковий пароль адміністратора. Задається при створенні сервісу
+      # і діє ЛИШЕ до першого входу — далі змінюється в адмінці
+      # (Налаштування → Змінити пароль). У базі зберігається bcrypt-хеш.
+      - key: PP_ADMIN_PASSWORD
+        sync: false
+
+      # Ключ API Нової пошти. Живе тільки тут, на сервері: браузер
+      # звертається до /api/delivery/*, а не напряму до Нової пошти,
+      # тому ключ ніколи не потрапляє у фронтенд-бандл.
+      - key: NOVA_POSHTA_API_KEY
+        sync: false
+
+# Диск НЕ потрібен: завантажені зображення зберігаються в базі
+# (таблиця uploaded_files, див. backend/app/routers/uploads.py), а не
+# на файловій системі. До того ж безкоштовний тариф Render дисків не має.

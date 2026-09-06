@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { useHistory } from 'react-router-dom';
 import { media, TOUCH_TARGET } from '../utils/responsive';
+import { useCatalog } from '../data/catalogStore';
 
 /**
  * Футер магазину Parket Planet.
@@ -32,21 +33,15 @@ const CONTACTS = {
   hours: 'Пн - Пт: 09:00 - 19:00'
 };
 
-/* `to: null` — сторінки ще немає, пункт показуємо, але не навігуємо */
+/* `to: null` — сторінки ще немає, пункт показуємо, але не навігуємо.
+   Колонка «Каталог» сюди НЕ входить: вона будується з реальних категорій
+   каталогу (див. useCatalog нижче), тому нова категорія з адмін-панелі
+   з'являється у футері сама. */
 const COLUMNS = [
-  {
-    title: 'Каталог',
-    items: [
-      { label: 'Паркетна дошка', to: '/catalog' },
-      { label: 'Масивна дошка', to: '/catalog' },
-      { label: 'Ламінат', to: '/catalog' },
-      { label: 'Супутні товари', to: '/catalog' }
-    ]
-  },
   {
     title: 'Покупцям',
     items: [
-      { label: 'Оплата і доставка', to: null },
+      { label: 'Оплата і доставка', to: '/delivery' },
       { label: 'Гарантія та повернення', to: null },
       { label: 'Калькулятор матеріалу', to: null },
       { label: 'Питання та відповіді', to: null }
@@ -503,6 +498,23 @@ function SocialButton({ url, label, children }) {
 export default function Footer() {
   const history = useHistory();
 
+  /* Категорії футера — з того самого стору, що й головна та каталог.
+     Одне джерело даних означає, що список тут ніколи не розійдеться
+     з реальним каталогом: додали категорію в адмінці — вона тут є,
+     прибрали — зникла. */
+  const categories = useCatalog(state => state.categories);
+  const order = useCatalog(state => state.order);
+
+  const catalogColumn = {
+    title: 'Каталог',
+    items: order
+      .map(slug => categories[slug])
+      .filter(Boolean)
+      .map(category => ({ label: category.title, to: `/${category.slug}` }))
+  };
+
+  const columns = [catalogColumn].concat(COLUMNS);
+
   const go = (event, to) => {
     event.preventDefault();
     history.push(to);
@@ -512,7 +524,7 @@ export default function Footer() {
     <FooterRoot>
       <Inner>
         <Grid>
-          {COLUMNS.map(column => (
+          {columns.map(column => (
             <Column
               key={column.title}
               aria-label={column.title}

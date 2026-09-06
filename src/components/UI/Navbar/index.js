@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   NavbarWrapper,
   NavbarIcon,
@@ -20,19 +20,20 @@ import "react-accessible-accordion/dist/fancy-example.css";
 import HomeInfo from "./HomeInfo";
 import TextureSelection from "./TextureSelection";
 import { useModel } from "../../../state/Store";
-import { floorData } from "./data";
+import { useFloors, loadFloors } from "../../../state/floors";
 import Button from "../Button";
 import { useTranslation } from "react-i18next";
 
-const accordionList = [
+/* Список формуємо з актуальних підлог: вони приходять з бекенда,
+   а поки він не відповів — це стандартний набір із data.js */
+const buildAccordionList = (floors) => [
   {
     id: 1,
     title: "flooring",
     type: "Floor",
     isDoorSelection: false,
-    data: floorData,
+    data: floors,
   },
-  
 ];
 
 const Navbar = ({ active, theme }) => {
@@ -42,6 +43,15 @@ const Navbar = ({ active, theme }) => {
   const isUkrainian = i18n.language === "ua" ? true : false;
 
   const [toggleFurniture, setToggleFurniture] = useState(false);
+
+  /* Підлоги для 3D: тягнемо один раз при монтуванні панелі */
+  const floors = useFloors((state) => state.floors);
+
+  useEffect(() => {
+    loadFloors();
+  }, []);
+
+  const accordionList = buildAccordionList(floors);
 
   const { model, scene, setActiveFloor, lightMaps } = useModel(
     (state) => state

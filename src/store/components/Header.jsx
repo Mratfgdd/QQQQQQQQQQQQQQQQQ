@@ -3,6 +3,8 @@ import styled from 'styled-components';
 import { useHistory } from 'react-router-dom';
 import MobileMenu, { HamburgerButton } from './MobileMenu';
 import ThemeToggle from './ThemeToggle';
+import { CartButton, FavoritesButton } from './HeaderActions';
+import PremiumButton from './PremiumButton';
 import { useShop, selectFavoritesCount, selectCartCount } from '../state/shopStore';
 import { media } from '../utils/responsive';
 
@@ -102,6 +104,18 @@ const NavItem = styled.div`
   gap: 10px;
   color: #ffffff;
 
+  /* Пункти, які ведуть на сторінку, реагують на курсор.
+     Раніше це були просто декоративні блоки без обробника — саме тому
+     клік по «Оплата» та «Доставка» нічого не робив. */
+  &[role='link'] {
+    cursor: pointer;
+    transition: opacity 0.25s ease;
+
+    &:hover {
+      opacity: 0.75;
+    }
+  }
+
   .icon-box {
     color: #ffffff;
     display: flex;
@@ -161,114 +175,19 @@ const RightSection = styled.div`
   }
 `;
 
-const CartIcon = styled.div`
-  position: relative; /* якір для лічильника */
-  color: #ffffff;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  opacity: 0.9;
-  transition: transform 0.2s;
 
-  svg {
-    stroke: #ffffff;
-    fill: none;
-    stroke-width: 1.5;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-
-  &:hover {
-    transform: scale(1.05);
-    opacity: 1;
-  }
-
-  /* Маленький бейдж із кількістю. З'являється лише коли є що рахувати. */
-  .badge {
-    position: absolute;
-    top: -6px;
-    right: -8px;
-    min-width: 17px;
-    height: 17px;
-    padding: 0 4px;
-    border-radius: 999px;
-    background-color: var(--pp-accent);
-    color: #ffffff;
-    font-size: 10.5px;
-    font-weight: 600;
-    line-height: 17px;
-    text-align: center;
-    box-sizing: border-box;
-    pointer-events: none;
-  }
-
-  /* Збільшуємо зону натискання під палець */
-  ${media.tablet} {
-    width: 44px;
-    height: 44px;
-    justify-content: center;
-    flex-shrink: 0;
-
-    .badge {
-      top: 2px;
-      right: 0;
-    }
-  }
-
-  /* Телефон: у шапці тепер три контроли — трохи стискаємо */
-  ${media.mobile} {
-    width: 38px;
-    height: 38px;
-
-    svg {
-      width: 21px;
-      height: 21px;
-    }
-  }
-`;
-
-const VisualBtn = styled.button`
-  background-color: var(--pp-accent);
-  color: #ffffff;
-  border: none;
-  padding: 11px 26px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: background-color 0.3s, transform 0.2s;
-  box-shadow: 0 4px 12px rgba(185, 147, 90, 0.15);
-  white-space: nowrap;
-
-  &:hover {
-    background-color: var(--pp-accent-strong);
-    transform: translateY(-1px);
-  }
-
-  /* Планшет: компактна кнопка залишається */
-  ${media.tablet} {
-    padding: 11px 16px;
-    font-size: 11px;
-    letter-spacing: 0.5px;
-    min-height: 44px;
-  }
-
+/* «3D Візуалізація» — та сама кнопка, що й головна дія на першому екрані,
+   але у варіанті outline: у темній шапці достатньо волосяної золотої
+   рамки, а колір з'являється лише під курсором. Маршрут (/hall) не
+   змінювався. */
+const VisualBtn = styled(PremiumButton)`
   /* Телефон: кнопка переїжджає в мобільне меню */
   ${media.mobile} {
     display: none;
   }
 `;
 
-/* ── Іконки (спільні для десктопної шапки та мобільного меню) ── */
-const PaymentIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24">
-    <rect width="20" height="14" x="2" y="5" rx="2" />
-    <line x1="2" x2="22" y1="10" y2="10" />
-  </svg>
-);
-
+/* ── Іконки десктопної шапки ── */
 const DeliveryIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24">
     <path d="M14 18H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v7" />
@@ -312,23 +231,22 @@ export default function Header() {
         </LogoSection>
 
         <NavLinks>
-          {/* Оплата */}
-          <NavItem>
-            <div className="icon-box">
-              <PaymentIcon />
-            </div>
-            <div className="content">
-              <span className="label">Оплата</span>
-            </div>
-          </NavItem>
-
-          {/* Доставка */}
-          <NavItem>
+          {/* Єдиний сервісний пункт: «Доставка Новою поштою».
+              Окремого пункту «Оплата та доставка» більше немає — сторінка
+              /delivery одна, тож два входи в неї лише плутали. */}
+          <NavItem
+            role="link"
+            tabIndex={0}
+            onClick={() => history.push('/delivery')}
+            onKeyDown={event => event.key === 'Enter' && history.push('/delivery')}
+            title="Доставка Новою поштою"
+          >
             <div className="icon-box">
               <DeliveryIcon />
             </div>
             <div className="content">
               <span className="label">Доставка</span>
+              <span className="sub-label">Новою поштою</span>
             </div>
           </NavItem>
 
@@ -358,34 +276,12 @@ export default function Header() {
         <RightSection>
           <ThemeToggle className="pp-header-theme" />
 
-          <CartIcon
-            onClick={() => history.push('/favorites')}
-            role="button"
-            tabIndex={0}
-            aria-label={`Обране${favoritesCount ? `: ${favoritesCount}` : ''}`}
-            title="Обране"
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24">
-              <path d="M12 20.5s-7.5-4.7-7.5-10a4.3 4.3 0 0 1 7.5-2.8 4.3 4.3 0 0 1 7.5 2.8c0 5.3-7.5 10-7.5 10z" />
-            </svg>
-            {favoritesCount > 0 && <span className="badge">{favoritesCount}</span>}
-          </CartIcon>
+          {/* Той самий вигляд, що й був: стилі просто переїхали
+              в HeaderActions, щоб шапка товару використовувала їх теж */}
+          <FavoritesButton />
+          <CartButton />
 
-          <CartIcon
-            onClick={() => history.push('/cart')}
-            role="button"
-            tabIndex={0}
-            aria-label={`Кошик${cartCount ? `: ${cartCount}` : ''}`}
-            title="Кошик"
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24">
-              <circle cx="8" cy="21" r="1" />
-              <circle cx="19" cy="21" r="1" />
-              <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
-            </svg>
-            {cartCount > 0 && <span className="badge">{cartCount}</span>}
-          </CartIcon>
-          <VisualBtn onClick={() => history.push('/hall')}>
+          <VisualBtn variant="outline" arrow onClick={() => history.push('/hall')}>
             3D Візуалізація
           </VisualBtn>
 
@@ -417,8 +313,10 @@ export default function Header() {
           { label: 'Кошик', badge: cartCount, onClick: () => history.push('/cart') }
         ]}
         info={[
-          { label: 'Оплата', icon: <PaymentIcon /> },
-          { label: 'Доставка', icon: <DeliveryIcon /> }
+          {
+            label: 'Доставка Новою поштою',
+            onClick: () => history.push('/delivery')
+          }
         ]}
         contacts={[
           {

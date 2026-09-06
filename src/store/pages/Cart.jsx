@@ -418,7 +418,6 @@ function CartLine({ item }) {
 export default function Cart() {
   const history = useHistory();
   const cart = useShop(state => state.cart);
-  const showToast = useShop(state => state.showToast);
   const productIndex = useCatalog(state => state.productIndex);
   const priceIndex = useCatalog(state => state.products);
 
@@ -480,14 +479,7 @@ export default function Cart() {
                 <span>{formatPrice(total)}</span>
               </div>
 
-              {/* Сторінки оформлення в проєкті ще немає, тому кнопка чесно
-                  повідомляє про це, а не веде кудись навмання. Коли з'явиться
-                  маршрут — сюди досить підставити history.push(...). */}
-              <GhostButton
-                onClick={() =>
-                  showToast(`Замовлення на ${formatPrice(total)} — менеджер зв'яжеться з вами`)
-                }
-              >
+              <GhostButton onClick={() => history.push('/checkout')}>
                 Оформити замовлення <span>→</span>
               </GhostButton>
             </Summary>

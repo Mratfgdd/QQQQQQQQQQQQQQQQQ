@@ -14,9 +14,28 @@ from sqlalchemy.orm import Session
 
 from .auth import hash_password
 from .config import INITIAL_ADMIN_PASSWORD, INITIAL_ADMIN_USERNAME
-from .models import AdminUser, CalculatorSettings, Category, Product, ProductImage
+from .models import (
+    AdminUser,
+    AppState,
+    CalculatorSettings,
+    Category,
+    GalleryPhoto,
+    Product,
+    ProductImage,
+)
 
 SEED_FILE = Path(__file__).resolve().parent / "seed_data.json"
+
+# Стартовий вміст галереї — ті самі файли, що вже лежать у public/
+# і показувалися на /collection до появи адмінки.
+GALLERY_SEED = [
+    {"url": "/p4.jpg", "alt": "Дубова підлога у вітальні"},
+    {"url": "/p1.png", "alt": "Темний дубовий паркет"},
+    {"url": "/p2.jpg", "alt": "Медовий дубовий паркет"},
+    {"url": "/p3.png", "alt": "Світлий дубовий паркет"},
+]
+
+GALLERY_SEEDED_KEY = "gallery_seeded"
 
 
 def ensure_admin(db: Session) -> None:
@@ -61,9 +80,65 @@ def ensure_catalog(db: Session) -> None:
     db.commit()
 
 
+def ensure_gallery(db: Session) -> None:
+    """Наповнює галерею стартовими фотографіями РІВНО ОДИН РАЗ.
+
+    Перевірка «таблиця порожня → засідувати» тут не годиться: якщо
+    адміністратор навмисно видалить усі фотографії, при наступному
+    перезапуску сервера вони б повернулися. Тому факт сідингу
+    запам'ятовується прапорцем в app_state і більше не повторюється —
+    порожня галерея лишається порожньою.
+    """
+    if db.get(AppState, GALLERY_SEEDED_KEY) is not None:
+        return
+
+    # Нічого не додаємо поверх уже наявних фотографій — лише позначаємо,
+    # що стартове наповнення відпрацювало
+    if db.query(GalleryPhoto).count() == 0:
+        for position, photo in enumerate(GALLERY_SEED):
+            db.add(GalleryPhoto(position=position, is_active=True, **photo))
+
+    db.add(AppState(key=GALLERY_SEEDED_KEY, value="1"))
+    db.commit()
+
+
+def fix_category_images(db: Session) -> None:
+    """Розводить прев'ю категорій по різних фотографіях.
+
+    Перший сід поклав усім чотирьом категоріям один і той самий
+    /catalog-hero.jpg (це темний фон сторінки каталогу, а не прев'ю), а
+    головна сторінка тим часом показувала власні захардкоджені файли.
+    Тепер картки читають прев'ю з бази, тому база має містити саме ті
+    зображення, які сайт і показував.
+
+    Обережно й ідемпотентно: чіпаємо ТІЛЬКИ рядки, де досі стоїть
+    placeholder або порожньо. Якщо адміністратор уже вибрав своє фото —
+    воно лишається недоторканим.
+    """
+    placeholders = {"", "/catalog-hero.jpg"}
+    defaults = {
+        "parquet": "/parquet.jpg",
+        "parquet-board": "/board.jpg",
+        "laminate": "/laminate.jpg",
+        "accessories": "/accessories.jpg",
+    }
+
+    changed = False
+    for category in db.query(Category).all():
+        wanted = defaults.get(category.slug)
+        if wanted and (category.image or "") in placeholders:
+            category.image = wanted
+            changed = True
+
+    if changed:
+        db.commit()
+
+
 def run(db: Session) -> None:
     ensure_admin(db)
     ensure_catalog(db)
+    ensure_gallery(db)
+    fix_category_images(db)
     top_up_specs(db)
 
 

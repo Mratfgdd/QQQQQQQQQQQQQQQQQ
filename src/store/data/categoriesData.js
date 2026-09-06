@@ -21,6 +21,11 @@ export const CATEGORIES = {
     title: 'Паркет',
     breadcrumb: 'Паркет',
     subtitle: 'Натуральний паркет преміум якості. Європейське дерево.',
+    /* Прев'ю картки на головній. Те саме значення лежить у базі
+       (Category.image), звідки його й бере сайт, коли бекенд піднято.
+       Тут — лише фолбек на випадок недоступного бекенда. */
+    image: '/parquet.jpg',
+    cardText: 'Натуральний масив дуба та інших порід дерева',
     products: [
       {
         key: 'oak',
@@ -67,6 +72,8 @@ export const CATEGORIES = {
     title: 'Паркетна дошка',
     breadcrumb: 'Паркетна дошка',
     subtitle: 'Багатошарова дошка з натуральним шпоном. Стабільна геометрія та швидкий монтаж.',
+    image: '/board.jpg',
+    cardText: 'Ідеальне поєднання міцності та краси',
     products: [
       {
         key: 'board-oak-natur',
@@ -113,6 +120,8 @@ export const CATEGORIES = {
     title: 'Ламінат',
     breadcrumb: 'Ламінат',
     subtitle: 'Ламінат преміум класу. Висока зносостійкість і реалістична текстура дерева.',
+    image: '/laminate.jpg',
+    cardText: 'Сучасний ламінат преміум класу',
     products: [
       {
         key: 'laminate-siena',
@@ -159,6 +168,8 @@ export const CATEGORIES = {
     title: 'Аксесуари',
     breadcrumb: 'Аксесуари',
     subtitle: 'Плінтуси, підкладка та засоби догляду — усе для монтажу й довгого життя підлоги.',
+    image: '/accessories.jpg',
+    cardText: 'Плінтуси, засоби для догляду та монтажу',
     products: [
       {
         key: 'skirting-oak',
@@ -216,10 +227,16 @@ export const getCategory = slug => CATEGORIES[slug] || CATEGORIES.parquet;
 export const PRODUCT_INDEX = {};
 
 CATEGORY_ORDER.forEach(slug => {
-  CATEGORIES[slug].products.forEach(product => {
+  CATEGORIES[slug].products.forEach((product, index) => {
     PRODUCT_INDEX[product.detailId] = Object.assign({}, product, {
       categorySlug: slug,
       categoryTitle: CATEGORIES[slug].title,
+      /* Ті самі поля, що приходять з бекенда, — щоб сортування однаково
+         працювало і на статичному фолбеку */
+      title: product.titleLines.join(' '),
+      isPopular: index === 0,
+      position: index,
+      createdAt: '',
       /* Одиниця виміру ціни: у більшості товарів це м², у плінтуса — метр
          погонний, у засобу догляду — літр */
       unit: product.unit || 'м²'

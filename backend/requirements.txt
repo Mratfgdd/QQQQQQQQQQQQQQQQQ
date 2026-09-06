@@ -5,3 +5,11 @@ pydantic>=2.7
 python-multipart>=0.0.9
 bcrypt>=4.1
 PyJWT>=2.8
+
+# Клієнт до API Нової пошти (app/routers/delivery.py).
+# Раніше його тут бракувало — на чистій машині бекенд не стартував.
+httpx>=0.27
+
+# Потрібен лише якщо PP_DATABASE_URL вказує на Postgres.
+# Локально працює SQLite і драйвер не задіюється.
+psycopg[binary]>=3.1

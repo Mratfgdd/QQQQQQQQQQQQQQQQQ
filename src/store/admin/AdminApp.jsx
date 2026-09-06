@@ -1,10 +1,14 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
-import { api } from '../api/client';
+import { api, mediaUrl } from '../api/client';
 import { loadCatalog } from '../data/catalogStore';
+import { loadGallery } from '../data/galleryStore';
 import ThemeToggle from '../components/ThemeToggle';
 import AdminLogin from './AdminLogin';
 import AdminProducts from './AdminProducts';
+import AdminFloors from './AdminFloors';
+import AdminGallery from './AdminGallery';
+import AdminOrders from './AdminOrders';
 import {
   AdminShell,
   Badge,
@@ -36,8 +40,11 @@ import { media } from '../utils/responsive';
 
 const SECTIONS = [
   { key: 'dashboard', label: 'Dashboard' },
+  { key: 'orders', label: 'Замовлення' },
   { key: 'products', label: 'Товари' },
   { key: 'categories', label: 'Категорії' },
+  { key: 'gallery', label: 'Галерея' },
+  { key: 'floors', label: '3D Матеріали' },
   { key: 'settings', label: 'Налаштування' }
 ];
 
@@ -320,11 +327,90 @@ function Dashboard() {
   );
 }
 
+/* Прев'ю категорії в списку та у формі.
+
+   Саме тут була причина «порожніх світлих квадратів»: рядок малював
+   <div className="thumb" /> взагалі без зображення, тому завжди було
+   видно лише сіру підкладку .thumb, хоча в базі, у схемі та у відповіді
+   API поле image весь час було заповнене. */
+const CategoryThumb = styled.div`
+  width: 64px;
+  height: 52px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background-color: var(--pp-surface-2);
+  background-image: ${props => (props.$src ? `url(${props.$src})` : 'none')};
+  background-size: cover;
+  background-position: center;
+  border: 1px solid var(--pp-divider);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--pp-text-3);
+  text-align: center;
+`;
+
+const ImagePicker = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+
+  .big {
+    width: 132px;
+    height: 92px;
+    border-radius: 10px;
+    border: 1px solid var(--pp-divider);
+    background-color: var(--pp-surface-2);
+    background-size: cover;
+    background-position: center;
+    flex-shrink: 0;
+  }
+
+  .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 220px;
+    flex: 1;
+  }
+
+  .path {
+    font-size: 11.5px;
+    color: var(--pp-text-3);
+    word-break: break-all;
+  }
+`;
+
 /* ── Категорії ── */
 function Categories({ categories, reload }) {
   const [editing, setEditing] = useState(null);
   const [removing, setRemoving] = useState(null);
   const [error, setError] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const imageInput = useRef(null);
+
+  /* Прев'ю категорії зберігається так само, як фото товару: файл іде
+     через існуючий /api/admin/uploads, а в базу лягає лише шлях */
+  const uploadImage = async event => {
+    const file = (event.target.files || [])[0];
+    event.target.value = '';
+    if (!file) return;
+
+    setUploading(true);
+    setError('');
+    try {
+      const uploaded = await api.upload(file);
+      setEditing(current => Object.assign({}, current, { image: uploaded.url }));
+    } catch (uploadError) {
+      setError(uploadError.message || 'Не вдалося завантажити зображення');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const save = async event => {
     event.preventDefault();
@@ -418,6 +504,72 @@ function Categories({ categories, reload }) {
               <input value={editing.subtitle} onChange={e => setEditing({ ...editing, subtitle: e.target.value })} />
             </Field>
           </div>
+
+          {/* ── Прев'ю категорії ──
+              Це те саме зображення, яке показує картка категорії на
+              головній сторінці. */}
+          <div style={{ marginTop: 20 }}>
+            <span
+              className="label"
+              style={{
+                fontSize: 11.5,
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                color: 'var(--pp-text-3)'
+              }}
+            >
+              Прев'ю категорії — показується на головній
+            </span>
+
+            <ImagePicker style={{ marginTop: 10 }}>
+              <div
+                className="big"
+                style={
+                  editing.image
+                    ? { backgroundImage: `url(${mediaUrl(editing.image)})` }
+                    : undefined
+                }
+              />
+              <div className="controls">
+                <input
+                  ref={imageInput}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/avif"
+                  onChange={uploadImage}
+                  style={{ display: 'none' }}
+                />
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <GhostBtn
+                    type="button"
+                    disabled={uploading}
+                    onClick={() => imageInput.current.click()}
+                  >
+                    {uploading ? 'Завантаження…' : 'Завантажити фото'}
+                  </GhostBtn>
+                  {editing.image && (
+                    <GhostBtn
+                      type="button"
+                      onClick={() => setEditing({ ...editing, image: '' })}
+                    >
+                      Прибрати
+                    </GhostBtn>
+                  )}
+                </div>
+                <Field>
+                  <span className="label">або шлях до файлу</span>
+                  <input
+                    value={editing.image}
+                    onChange={e => setEditing({ ...editing, image: e.target.value })}
+                    placeholder="/parquet.jpg"
+                  />
+                </Field>
+                <span className="path">
+                  {editing.image ? editing.image : 'Зображення не вибране'}
+                </span>
+              </div>
+            </ImagePicker>
+          </div>
+
           <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
             <Button type="submit">Зберегти</Button>
             <GhostBtn type="button" onClick={() => setEditing(null)}>Скасувати</GhostBtn>
@@ -428,7 +580,12 @@ function Categories({ categories, reload }) {
       <Rows>
         {categories.map(category => (
           <Row key={category.id}>
-            <div className="thumb" />
+            <CategoryThumb
+              $src={category.image ? mediaUrl(category.image) : ''}
+              title={category.image || 'Прев\'ю не задане'}
+            >
+              {!category.image && 'нема фото'}
+            </CategoryThumb>
             <div className="name">
               <strong>{category.title}</strong>
               <small>/{category.slug}</small>
@@ -542,11 +699,12 @@ export default function AdminApp() {
     if (user) reloadCategories();
   }, [user, reloadCategories]);
 
-  /* Після будь-якої зміни оновлюємо і публічний каталог, щоб сайт
+  /* Після будь-якої зміни оновлюємо публічні стори, щоб сайт
      в іншій вкладці/за навігацією одразу показував свіжі дані */
   const syncSite = useCallback(async () => {
     await reloadCategories();
     await loadCatalog();
+    await loadGallery();
   }, [reloadCategories]);
 
   const logout = async () => {
@@ -609,10 +767,13 @@ export default function AdminApp() {
 
       <Content>
         {section === 'dashboard' && <Dashboard />}
+        {section === 'orders' && <AdminOrders />}
         {section === 'products' && (
           <AdminProducts categories={categories} onDataChanged={syncSite} />
         )}
         {section === 'categories' && <Categories categories={categories} reload={syncSite} />}
+        {section === 'gallery' && <AdminGallery onDataChanged={syncSite} />}
+        {section === 'floors' && <AdminFloors onDataChanged={syncSite} />}
         {section === 'settings' && <Settings user={user} />}
       </Content>
     </AdminShell>

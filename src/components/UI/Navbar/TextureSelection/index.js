@@ -14,7 +14,14 @@ const onSelectItem = (model, item, type, setSelectedItem) => {
   const { textureImg } = item;
   const loader = new TextureLoader();
   const color = new Color(item.color);
-  // loader.crossOrigin = "";
+
+  /* Текстури з адмін-панелі лежать на бекенді (інший origin), тому
+     без crossOrigin WebGL відмовиться з них малювати */
+  loader.setCrossOrigin("anonymous");
+
+  /* Масштаб плитки задає адміністратор для кожної підлоги окремо;
+     4 — те саме значення, що було захардкоджене раніше */
+  const tile = Number(item.repeat) > 0 ? Number(item.repeat) : 4;
 
   if (model) {
     model.traverse((o) => {
@@ -44,16 +51,20 @@ const onSelectItem = (model, item, type, setSelectedItem) => {
           loader.load(
             textureImg,
             (texture) => {
-              texture.repeat.set(4, 4);
+              texture.repeat.set(tile, tile);
               texture.encoding = sRGBEncoding;
               texture.wrapS = RepeatWrapping;
               texture.wrapT = RepeatWrapping;
               o.material.map = texture;
-              // o.material.needsUpdate = true;
+              /* Без needsUpdate three може лишити стару текстуру
+                 в кеші матеріалу — саме тому підлога інколи не мінялася */
+              o.material.needsUpdate = true;
             },
             (xhr) => {},
             (error) => {
-              console.log(error);
+              /* Текстура не завантажилась — сцена лишається з попередньою,
+                 нічого не ламається */
+              console.warn("Не вдалося завантажити текстуру підлоги", textureImg, error);
             }
           );
         }
@@ -94,7 +105,7 @@ export default function TextureSelection({
               isDoorSelection={doorSelection}
               key={item.id}
               className={isSelected ? "is-selected" : null}
-              src={item.textureImg ? item.textureImg : item.color}
+              src={item.previewImg || item.textureImg || item.color}
               isColor={item.color}
               title={item.name}
             >

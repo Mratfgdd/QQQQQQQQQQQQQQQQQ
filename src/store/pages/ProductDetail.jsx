@@ -3,9 +3,25 @@ import styled, { createGlobalStyle } from 'styled-components';
 import { useHistory, useParams } from 'react-router-dom';
 import { PRODUCTS_DATA } from '../data/productsData';
 import MobileMenu, { HamburgerButton } from '../components/MobileMenu';
+import { CartButton, FavoritesButton } from '../components/HeaderActions';
+import SearchOverlay from '../components/SearchOverlay';
 import { useCatalog } from '../data/catalogStore';
-import { useShop, selectIsFavorite, selectCartQty } from '../state/shopStore';
+import {
+  useShop,
+  selectIsFavorite,
+  selectCartQty,
+  selectCartCount,
+  selectFavoritesCount
+} from '../state/shopStore';
 import { media } from '../utils/responsive';
+import { calculateFloor, toPositiveNumber } from '../utils/floorCalc';
+/* Підписи для старої форми характеристик зі статичного productsData.js */
+const LEGACY_SPEC_LABELS = {
+  wood: 'Порода дерева',
+  sorting: 'Сортування',
+  coating: 'Покриття'
+};
+
 /* ======================================================
    ВБУДОВАНІ ІКОНКИ (100% сумісність без залежностей)
    ====================================================== */
@@ -49,13 +65,6 @@ const IconHeart = ({ size = 16 }) => (
   </svg>
 );
 
-const IconShoppingBag = ({ size = 16 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
-    <path d="M3 6h18"/>
-    <path d="M16 10a4 4 0 0 1-8 0"/>
-  </svg>
-);
 
 /* ── Іконки, які є у мобільному референсі (Mobele_version.png).
    На десктопі вони приховані через CSS, тож десктопна верстка
@@ -300,21 +309,9 @@ const HeaderIconButton = styled.div`
   position: relative;
   &:hover { color: #ffffff; }
 
-  .cart-badge {
-    position: absolute;
-    top: -6px;
-    right: -8px;
-    background: #c5a880;
-    color: #000;
-    font-size: 9px;
-    font-weight: 700;
-    width: 15px;
-    height: 15px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+  /* Правила .cart-badge звідси прибрані: кошик і обране тепер малює
+     спільний компонент HeaderActions (той самий, що на головній), а цей
+     контейнер лишився тільки під іконку пошуку, у якої лічильника немає. */
 
   /* Референс: усі чотири іконки лишаються у шапці й на телефоні.
      Зона натискання тримається щонайменше 38–40px. */
@@ -322,8 +319,6 @@ const HeaderIconButton = styled.div`
     width: 40px;
     height: 40px;
     flex-shrink: 0;
-
-    .cart-badge { top: 3px; right: 2px; }
   }
 
   ${media.mobile} {
@@ -334,14 +329,6 @@ const HeaderIconButton = styled.div`
   ${media.smallMobile} {
     width: 32px;
     height: 32px;
-
-    .cart-badge {
-      top: 1px;
-      right: 0;
-      width: 13px;
-      height: 13px;
-      font-size: 8px;
-    }
   }
 
   @media (max-width: 360px) {
@@ -350,26 +337,6 @@ const HeaderIconButton = styled.div`
   }
 `;
 
-const CallRequestBtn = styled.button`
-  background: var(--pp-bg-cream);
-  color: var(--pp-ink);
-  border: none;
-  padding: 10px 22px;
-  font-size: 12px;
-  font-weight: 600;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-  &:hover { background: var(--pp-surface); transform: translateY(-1px); }
-
-  /* У референсі шапка мобільної версії не містить цієї кнопки — її місце
-     займає бургер. Сама дія збережена: вона є першим пунктом-CTA
-     у мобільному меню. */
-  ${media.tablet} {
-    display: none;
-  }
-`;
 
 const MainContainer = styled.main`
   max-width: 1400px;
@@ -1750,17 +1717,37 @@ export default function ProductDetail() {
   const [activeImg, setActiveImg] = useState(0);
   const [activeTab, setActiveTab] = useState('description');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  /* Категорії для шапки — з того самого стору, що й каталог, тому
+     порядок і назви завжди збігаються з реальними маршрутами */
+  const catalogCategories = useCatalog(state => state.categories);
+  const catalogOrder = useCatalog(state => state.order);
+  const categoryLinks = catalogOrder
+    .map(slug => catalogCategories[slug])
+    .filter(Boolean)
+    .map(category => ({ slug: category.slug, title: category.title }));
+
+  /* Лічильники для мобільного меню (у самих кнопках вони свої) */
+  const favoritesCount = useShop(selectFavoritesCount);
+  const cartCount = useShop(selectCartCount);
 
   const [length, setLength] = useState(4.0);
   const [width, setWidth] = useState(3.2);
-  const [area, setArea] = useState(14.4);
-  const [packages, setPackages] = useState(6);
-  const [totalPrice, setTotalPrice] = useState(
-    Math.round(14.4 * product.pricePerM2)
-  );
 
   const PRICE_PER_M2 = product.pricePerM2;
-  const PACK_CAPACITY = product.packSqM;
+  /* Місткість упаковки не може бути нулем: інакше площа/0 дає Infinity,
+     і в результатах з'являлося б «Infinity шт.» */
+  const PACK_CAPACITY = product.packSqM > 0 ? product.packSqM : 1;
+
+  /* Початкові значення рахуються ТІЄЮ САМОЮ формулою, що й далі.
+     Раніше тут стояли числа руками (14.4 м² при кімнаті 4.0 × 3.2 = 12.8),
+     через що до першого перерахунку картка показувала неправильну площу
+     й суму. */
+  const initial = calculateFloor(4.0, 3.2, PRICE_PER_M2, PACK_CAPACITY);
+  const [area, setArea] = useState(initial.area);
+  const [packages, setPackages] = useState(initial.packages);
+  const [totalPrice, setTotalPrice] = useState(initial.totalPrice);
 
   /* Усе, що показує сторінка, береться з самого товару — тому будь-яка
      правка в адмін-панелі одразу видна тут після оновлення каталогу */
@@ -1768,28 +1755,38 @@ export default function ProductDetail() {
   const categoryTitle = productCard.categoryTitle || 'Каталог';
   const categoryPath = productCard.categorySlug ? `/${productCard.categorySlug}` : '/catalog';
   const productSubtitle = product.shortDescription || categoryTitle;
-  const productSpecs = product.specs || [];
+
+  /* Характеристики приходять у двох різних формах: бекенд віддає масив
+     [{icon, label, value}], а статичний фолбек productsData.js — об'єкт
+     {wood, sorting, coating}. Сторінка малює масив, тому на об'єкті
+     productSpecs.map() падав, і без піднятого бекенда сторінка товару
+     показувала порожній екран. Беремо масив із картки каталогу — вона в
+     потрібній формі в обох джерелах, — а старий об'єкт розкладаємо
+     вручну, щоб нічого не загубити. */
+  const productSpecs = Array.isArray(product.specs)
+    ? product.specs
+    : Array.isArray(productCard.specs) && productCard.specs.length
+    ? productCard.specs
+    : Object.keys(product.specs || {}).map(key => ({
+        label: LEGACY_SPEC_LABELS[key] || key,
+        value: product.specs[key]
+      }));
 
   // 🔄 Оновлення галереї та калькулятора при переході між товарами
   useEffect(() => {
     setActiveImg(0);
-    
-    const calculatedArea = parseFloat((length * width).toFixed(1));
-    const calculatedPackages = Math.ceil(calculatedArea / PACK_CAPACITY);
-    const calculatedPrice = Math.round(calculatedArea * PRICE_PER_M2);
 
-    setArea(calculatedArea);
-    setPackages(calculatedPackages);
-    setTotalPrice(calculatedPrice);
+    const result = calculateFloor(length, width, PRICE_PER_M2, PACK_CAPACITY);
+    setArea(result.area);
+    setPackages(result.packages);
+    setTotalPrice(result.totalPrice);
   }, [productId, PACK_CAPACITY, PRICE_PER_M2, length, width]);
 
   const handleCalculate = () => {
-    const calculatedArea = parseFloat((length * width).toFixed(1));
-    const calculatedPackages = Math.ceil(calculatedArea / PACK_CAPACITY);
-    const calculatedPrice = Math.round(calculatedArea * PRICE_PER_M2);
-    setArea(calculatedArea);
-    setPackages(calculatedPackages);
-    setTotalPrice(calculatedPrice);
+    const result = calculateFloor(length, width, PRICE_PER_M2, PACK_CAPACITY);
+    setArea(result.area);
+    setPackages(result.packages);
+    setTotalPrice(result.totalPrice);
   };
 
   const handleImageError = (e) => {
@@ -1806,29 +1803,24 @@ export default function ProductDetail() {
           <h1>PARKET PLANET</h1>
         </LogoSection>
 
+        {/* Пункти будуються з каталогу, тому кожен веде на свою категорію.
+            Раніше всі чотири були захардкоджені на /catalog — через це з
+            «Паркету» будь-який пункт повертав на паркет. */}
         <NavLinks>
-          <span onClick={() => history.push('/catalog')}>Паркет</span>
-          <span onClick={() => history.push('/catalog')}>Паркетна дошка</span>
-          <span onClick={() => history.push('/catalog')}>Ламінат</span>
-          <span onClick={() => history.push('/catalog')}>Аксесуари</span>
-          <span onClick={() => history.push('/about')}>Про нас</span>
-          <span onClick={() => history.push('/contacts')}>Контакти</span>
+          {categoryLinks.map(item => (
+            <span key={item.slug} onClick={() => history.push(`/${item.slug}`)}>
+              {item.title}
+            </span>
+          ))}
         </NavLinks>
 
         <RightHeaderSection>
-          <HeaderIconButton className="secondary" onClick={() => history.push('/search')}>
+          <HeaderIconButton className="secondary" onClick={() => setSearchOpen(true)}>
             <IconSearch size={18} />
           </HeaderIconButton>
-          <HeaderIconButton className="secondary" onClick={() => history.push('/favorites')}>
-            <IconHeart size={18} />
-          </HeaderIconButton>
-          <HeaderIconButton onClick={() => history.push('/cart')}>
-            <IconShoppingBag size={18} />
-            <span className="cart-badge">0</span>
-          </HeaderIconButton>
-          <CallRequestBtn onClick={() => history.push('/contacts')}>
-            Замовити дзвінок
-          </CallRequestBtn>
+          {/* Обране й кошик — той самий компонент, що й у шапці головної */}
+          <FavoritesButton />
+          <CartButton />
 
           {/* Видима лише на планшеті/телефоні (CSS) */}
           <HamburgerButton
@@ -1849,14 +1841,14 @@ export default function ProductDetail() {
         onClose={() => setMenuOpen(false)}
         links={[
           { label: 'Головна', onClick: () => history.push('/') },
-          { label: 'Паркет', onClick: () => history.push('/catalog') },
-          { label: 'Паркетна дошка', onClick: () => history.push('/catalog') },
-          { label: 'Ламінат', onClick: () => history.push('/catalog') },
-          { label: 'Аксесуари', onClick: () => history.push('/catalog') },
-          { label: 'Про нас', onClick: () => history.push('/about') },
-          { label: 'Контакти', onClick: () => history.push('/contacts') },
-          { label: 'Пошук', onClick: () => history.push('/search') },
-          { label: 'Обране', onClick: () => history.push('/favorites') },
+          /* Ті самі категорії, що й у десктопній навігації — з одного джерела */
+          ...categoryLinks.map(item => ({
+            label: item.title,
+            onClick: () => history.push(`/${item.slug}`)
+          })),
+          { label: 'Пошук', onClick: () => setSearchOpen(true) },
+          { label: 'Обране', badge: favoritesCount, onClick: () => history.push('/favorites') },
+          { label: 'Кошик', badge: cartCount, onClick: () => history.push('/cart') },
           { label: '3D Візуалізація', onClick: () => history.push('/hall') }
         ]}
         contacts={[
@@ -1871,11 +1863,12 @@ export default function ProductDetail() {
             href: 'mailto:parket_planet@i.ua'
           }
         ]}
-        cta={{
-          label: 'Замовити дзвінок',
-          onClick: () => history.push('/contacts')
-        }}
+        cta={{ label: '3D Візуалізація', onClick: () => history.push('/hall') }}
       />
+
+      {/* Пошук по каталогу — спільний оверлей, працює і на десктопі,
+          і на телефоні */}
+      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
 
       {/* ── ОСНОВНИЙ КОНТЕНТ (ВЕРХНЯ ЧАСТИНА НА ТЕМНОМУ ГРАДІЄНТІ) ── */}
       <MainContainer>
@@ -2006,8 +1999,9 @@ export default function ProductDetail() {
                     id="length-input"
                     type="number"
                     step="0.1"
+                    min="0"
                     value={length}
-                    onChange={(e) => setLength(parseFloat(e.target.value) || 0)}
+                    onChange={(e) => setLength(toPositiveNumber(e.target.value))}
                   />
                 </InputRow>
                 <InputRow>
@@ -2016,8 +2010,9 @@ export default function ProductDetail() {
                     id="width-input"
                     type="number"
                     step="0.1"
+                    min="0"
                     value={width}
-                    onChange={(e) => setWidth(parseFloat(e.target.value) || 0)}
+                    onChange={(e) => setWidth(toPositiveNumber(e.target.value))}
                   />
                 </InputRow>
 
@@ -2145,11 +2140,14 @@ export default function ProductDetail() {
         <FooterGrid>
           <FooterColumn>
             <h4>Каталог</h4>
+            {/* Той самий список, що й у шапці: тут усі чотири пункти теж
+                вели на /catalog, тобто завжди на паркет */}
             <ul>
-              <li onClick={() => history.push('/catalog')}>Паркетна дошка</li>
-              <li onClick={() => history.push('/catalog')}>Масивна дошка</li>
-              <li onClick={() => history.push('/catalog')}>Ламінат</li>
-              <li onClick={() => history.push('/catalog')}>Супутні товари</li>
+              {categoryLinks.map(item => (
+                <li key={item.slug} onClick={() => history.push(`/${item.slug}`)}>
+                  {item.title}
+                </li>
+              ))}
             </ul>
           </FooterColumn>
 

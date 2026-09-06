@@ -328,20 +328,6 @@ const Card = styled.figure`
     display: block;
   }
 
-  /* Підпис — читабельний, а не декоративна тінь */
-  figcaption {
-    display: block;
-    margin-top: 14px;
-    text-align: center;
-    font-family: 'Helvetica Neue', sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-    line-height: 1.45;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--pp-text-2);
-    opacity: var(--pp-caption, 0);
-  }
 
   ${media.tablet} {
     .pp-frame {
@@ -349,11 +335,6 @@ const Card = styled.figure`
       box-shadow: 0 18px 40px rgba(26, 26, 26, 0.15);
     }
 
-    figcaption {
-      margin-top: 11px;
-      font-size: 10.5px;
-      letter-spacing: 0.09em;
-    }
   }
 
   ${media.mobile} {
@@ -366,11 +347,6 @@ const Card = styled.figure`
       box-shadow: 0 16px 34px rgba(26, 26, 26, 0.15);
     }
 
-    figcaption {
-      margin-top: 12px;
-      font-size: 11.5px;
-      letter-spacing: 0.1em;
-    }
   }
 `;
 
@@ -461,7 +437,6 @@ export default function WorksSection() {
 
         card.style.opacity = clamp01(0.25 + t / 0.45).toFixed(4);
         card.style.filter = motion && softness > 0.15 ? `blur(${softness.toFixed(2)}px)` : 'none';
-        card.style.setProperty('--pp-caption', clamp01((t - 0.55) / 0.35).toFixed(4));
       });
     };
 
@@ -595,7 +570,6 @@ export default function WorksSection() {
               <div className="pp-frame">
                 <img src={encodeURI(work.src)} alt={work.title} loading="lazy" decoding="async" />
               </div>
-              <figcaption>{work.title}</figcaption>
             </Card>
           ))}
         </Stage>

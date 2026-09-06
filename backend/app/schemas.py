@@ -164,6 +164,37 @@ class CategoryWithProductsOut(CategoryOut):
     products: list[ProductOut] = []
 
 
+# ── Галерея колекції ──
+# Свідомо без ціни, slug і характеристик: це не товар, а фотографія.
+class GalleryPhotoCreate(BaseModel):
+    url: str = Field(min_length=1, max_length=400)
+    alt: str = Field(default="", max_length=200)
+    # None — покласти в кінець списку
+    position: int | None = None
+    is_active: bool = True
+
+
+class GalleryPhotoUpdate(BaseModel):
+    url: str | None = Field(default=None, min_length=1, max_length=400)
+    alt: str | None = Field(default=None, max_length=200)
+    position: int | None = None
+    is_active: bool | None = None
+
+
+class GalleryPhotoOut(ORMModel):
+    id: int
+    url: str
+    alt: str
+    position: int
+    is_active: bool
+
+
+class GalleryReorder(BaseModel):
+    """Повний порядок списку: id у тій послідовності, яку задав адміністратор."""
+
+    ids: list[int] = Field(min_length=1)
+
+
 # ── Калькулятор ──
 class CalculatorOut(ORMModel):
     waste_percent: float
@@ -188,6 +219,59 @@ class UploadOut(BaseModel):
     size: int
 
 
+class FloorOut(BaseModel):
+    """Форма, яку очікує 3D-візуалізатор (сумісна з floorData)."""
+
+    id: int
+    name: str
+    textureImg: str
+    previewImg: str = ""
+    repeat: float = 4
+    slug: str = ""
+    kind: str = ""
+
+
+class FloorMaterialBase(BaseModel):
+    slug: str = Field(min_length=1, max_length=80, pattern=r"^[a-z0-9-]+$")
+    name: str = Field(min_length=1, max_length=200)
+    kind: str = "Паркет"
+    description: str = ""
+    preview_url: str = ""
+    texture_url: str = Field(min_length=1, max_length=400)
+    texture_repeat: float = Field(gt=0, default=4)
+    is_active: bool = True
+    position: int = 0
+
+
+class FloorMaterialCreate(FloorMaterialBase):
+    pass
+
+
+class FloorMaterialUpdate(BaseModel):
+    slug: str | None = Field(default=None, pattern=r"^[a-z0-9-]+$")
+    name: str | None = None
+    kind: str | None = None
+    description: str | None = None
+    preview_url: str | None = None
+    texture_url: str | None = Field(default=None, min_length=1)
+    texture_repeat: float | None = Field(gt=0, default=None)
+    is_active: bool | None = None
+    position: int | None = None
+
+
+class FloorMaterialOut(ORMModel):
+    id: int
+    slug: str
+    name: str
+    kind: str
+    description: str
+    preview_url: str
+    texture_url: str
+    texture_repeat: float
+    is_active: bool
+    position: int
+
+
 class StatsOut(BaseModel):
     products: int
     categories: int
@@ -195,3 +279,53 @@ class StatsOut(BaseModel):
     popular: int
     latest: list[ProductOut]
     recently_updated: list[ProductOut]
+
+
+# ── Замовлення ──
+class OrderItemIn(BaseModel):
+    product_slug: str = ""
+    qty: int = Field(ge=1, le=999, default=1)
+
+
+class OrderItemOut(ORMModel):
+    product_slug: str
+    title: str
+    unit: str
+    price: float
+    qty: int
+
+
+class OrderCreate(BaseModel):
+    customer_name: str = Field(min_length=2, max_length=160)
+    phone: str = Field(min_length=9, max_length=32)
+    comment: str = Field(max_length=1000, default="")
+
+    delivery_method: str = Field(pattern="^(branch|postomat)$", default="branch")
+    area_ref: str = ""
+    area_name: str = ""
+    city_ref: str = ""
+    city_name: str = ""
+    warehouse_ref: str = ""
+    warehouse_name: str = ""
+
+    items: list[OrderItemIn] = Field(min_length=1)
+
+
+class OrderOut(ORMModel):
+    id: int
+    customer_name: str
+    phone: str
+    comment: str
+    delivery_method: str
+    area_name: str
+    city_name: str
+    warehouse_name: str
+    warehouse_ref: str
+    total: float
+    status: str
+    created_at: datetime
+    items: list[OrderItemOut]
+
+
+class OrderStatusUpdate(BaseModel):
+    status: str = Field(pattern="^(new|processing|shipped|done|cancelled)$")

@@ -1,10 +1,14 @@
 import React from 'react';
-import styled from 'styled-components';
+import styled, { css, keyframes } from 'styled-components';
 import { useHistory } from 'react-router-dom';
 import Header from '../components/Header';
 import VideoScrollSection from '../components/VideoScrollSection';
 import WorksSection from '../components/WorksSection';
+import WorksMarquee from '../components/WorksMarquee';
 import Footer from '../components/Footer';
+import PremiumButton from '../components/PremiumButton';
+import { useCatalog } from '../data/catalogStore';
+import { CATEGORIES as STATIC_CATEGORIES } from '../data/categoriesData';
 import { media } from '../utils/responsive';
 
 // 1. Головний контейнер з жорстким увімкненням скролу
@@ -77,7 +81,35 @@ const HeroSection = styled.section`
   }
 `;
 
+/* Плавна поява Hero: opacity + невеликий підйом, з послідовною
+   затримкою між елементами. Через CSS, а не JS — жодних re-render'ів
+   і жодного впливу на скрол. */
+const riseIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
+const heroReveal = css`
+  opacity: 0;
+  animation: ${riseIn} 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: ${props => props.$delay || '0s'};
+  will-change: opacity, transform;
+
+  /* Користувач попросив менше руху — показуємо одразу, без анімації */
+  @media (prefers-reduced-motion: reduce) {
+    opacity: 1;
+    animation: none;
+  }
+`;
+
 const Badge = styled.span`
+  ${heroReveal};
   color: var(--pp-accent);
   font-size: 13px;
   text-transform: uppercase;
@@ -93,6 +125,7 @@ const Badge = styled.span`
 `;
 
 const HeroTitle = styled.h1`
+  ${heroReveal};
   font-family: 'Times New Roman', serif;
   font-size: 56px;
   font-weight: 400;
@@ -118,6 +151,7 @@ const HeroTitle = styled.h1`
 `;
 
 const HeroSubtitle = styled.p`
+  ${heroReveal};
   font-size: 15px;
   color: rgba(255, 255, 255, 0.9);
   max-width: 450px;
@@ -135,58 +169,29 @@ const HeroSubtitle = styled.p`
   }
 `;
 
-const OrderButton = styled.button`
-  background-color: var(--pp-accent);
-  color: #ffffff;
-  border: none;
-  padding: 15px 35px;
-  font-size: 13px;
-  border-radius: 25px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 500;
-  transition: background-color 0.3s, transform 0.2s;
-
-  &:hover {
-    background-color: var(--pp-accent-strong);
-    transform: translateY(-2px);
-  }
+/**
+ * Обгортка головної CTA.
+ *
+ * Анімація появи живе САМЕ на обгортці, а не на самій кнопці. Причина
+ * технічна: CSS-анімація з `forwards` перебиває значення transform, тож
+ * якби riseIn стояв на кнопці, її hover-підйом і ефект натискання просто
+ * не спрацьовували б після завершення появи. Розділивши шари, отримуємо
+ * і плавний вхід, і живу кнопку.
+ */
+const HeroCtaWrap = styled.div`
+  ${heroReveal};
+  display: inline-flex;
 
   ${media.mobile} {
     width: 100%;
-    max-width: 320px;
-    min-height: 48px;
-    justify-content: center;
-    padding: 14px 24px;
-    font-size: 14px;
-  }
-`;
-
-const ReviewBlock = styled.div`
-  margin-top: 40px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-
-  .stars {
-    color: var(--pp-accent);
-    font-size: 14px;
-  }
-  .text {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.8);
+    /* Більше повітря від текстового блоку — лише на телефоні,
+       десктопне положення не змінюється. Разом із нижнім відступом
+       підзаголовка (28px) дає ~58px між описом і кнопкою. */
+    margin-top: 30px;
   }
 
-  ${media.mobile} {
-    margin-top: 26px;
-    flex-wrap: wrap;
-    gap: 8px;
-
-    .text {
-      font-size: 11.5px;
-    }
+  ${media.smallMobile} {
+    margin-top: 24px;
   }
 `;
 
@@ -313,86 +318,72 @@ const CategoryCard = styled.div`
 export default function Home() {
   const history = useHistory();
 
+  /* Картки категорій беруться з того самого стору, що й каталог, тому
+     прев'ю, назва й порядок приходять з бази. Раніше і фото, і назви
+     були захардкоджені прямо тут — через це зміна прев'ю в адмін-панелі
+     не давала на сайті жодного ефекту. */
+  const categories = useCatalog(state => state.categories);
+  const order = useCatalog(state => state.order);
+
+  const cards = order
+    .map(slug => categories[slug])
+    .filter(Boolean)
+    .map(category => {
+      /* Рекламний підпис на картці — це не поле каталогу, тому лежить
+         поруч зі статичними даними. Для категорії, доданої в адмінці,
+         показуємо її опис. */
+      const preset = STATIC_CATEGORIES[category.slug];
+      return {
+        slug: category.slug,
+        title: category.title,
+        image: category.image,
+        text: (preset && preset.cardText) || category.subtitle || ''
+      };
+    });
+
   return (
     <HomeWrapper>
       <Header />
 
       <HeroSection>
-        <Badge>Натуральна підлога</Badge>
-        <HeroTitle>Еко-колекція дубових паркетів</HeroTitle>
-        <HeroSubtitle>
+        <Badge $delay="0.15s">Натуральна підлога</Badge>
+        <HeroTitle $delay="0.35s">Еко-колекція дубових паркетів</HeroTitle>
+        <HeroSubtitle $delay="0.6s">
           Натуральне дерево. Європейська якість. Створюємо затишок у вашому домі на довгі роки.
         </HeroSubtitle>
         
-        <OrderButton onClick={() => history.push('/catalog')}>
-          Переглянути колекцію ➔
-        </OrderButton>
-
-        <ReviewBlock>
-          <div className="stars">★★★★★</div>
-          <div className="text">Понад 500+ задоволених клієнтів</div>
-        </ReviewBlock>
+        {/* Веде в галерею колекції, а не в каталог: каталог паркету
+            лишається окремо на /parquet (картка «Паркет» нижче).
+            Маршрут не змінювався — оновлено лише вигляд кнопки. */}
+        <HeroCtaWrap $delay="0.85s">
+          <PremiumButton
+            size="lg"
+            arrow
+            block
+            onClick={() => history.push('/collection')}
+          >
+            Переглянути колекцію
+          </PremiumButton>
+        </HeroCtaWrap>
       </HeroSection>
 
       <CategoriesSection>
         <CategoriesGrid>
-          
-          {/* 1. Паркет */}
-          <CategoryCard 
-            bg="/parquet.jpg" /* Сюди підставиться твоє фото паркету з папки public */
-            onClick={() => history.push('/parquet')}
-          >
-            <div className="top-content">
-              <h3>Паркет</h3>
-              <p>Натуральний масив дуба та інших порід дерева</p>
-            </div>
-            <div className="bottom-link">
-              Дивитися колекцію <span style={{ marginLeft: '6px' }}>→</span>
-            </div>
-          </CategoryCard>
-
-          {/* 2. Паркетна дошка */}
-          <CategoryCard 
-            bg="/board.jpg" /* Твоє фото паркетної дошки з папки public */
-            onClick={() => history.push('/parquet-board')}
-          >
-            <div className="top-content">
-              <h3>Паркетна дошка</h3>
-              <p>Ідеальне поєднання міцності та краси</p>
-            </div>
-            <div className="bottom-link">
-              Дивитися колекцію <span style={{ marginLeft: '6px' }}>→</span>
-            </div>
-          </CategoryCard>
-
-          {/* 3. Ламінат */}
-          <CategoryCard 
-            bg="/laminate.jpg" /* Твоє фото ламінату з папки public */
-            onClick={() => history.push('/laminate')}
-          >
-            <div className="top-content">
-              <h3>Ламінат</h3>
-              <p>Сучасний ламінат преміум класу</p>
-            </div>
-            <div className="bottom-link">
-              Дивитися колекцію <span style={{ marginLeft: '6px' }}>→</span>
-            </div>
-          </CategoryCard>
-
-          {/* 4. Аксесуари */}
-          <CategoryCard 
-            bg="/accessories.jpg" /* Твоє фото аксесуарів з папки public */
-            onClick={() => history.push('/accessories')}
-          >
-            <div className="top-content">
-              <h3>Аксесуари</h3>
-              <p>Плінтуси, засоби для догляду та монтажу</p>
-            </div>
-            <div className="bottom-link">
-              Дивитися колекцію <span style={{ marginLeft: '6px' }}>→</span>
-            </div>
-          </CategoryCard>
-
+          {cards.map(card => (
+            <CategoryCard
+              key={card.slug}
+              bg={card.image}
+              onClick={() => history.push(`/${card.slug}`)}
+            >
+              <div className="top-content">
+                <h3>{card.title}</h3>
+                <p>{card.text}</p>
+              </div>
+              <div className="bottom-link">
+                Дивитися колекцію <span style={{ marginLeft: '6px' }}>→</span>
+              </div>
+            </CategoryCard>
+          ))}
         </CategoriesGrid>
       </CategoriesSection>
 
@@ -401,6 +392,9 @@ export default function Home() {
 
       {/* Scroll-driven композиція «Паркетні роботи» */}
       <WorksSection />
+
+      {/* Рухомий рядок послуг зі світловим фокусом у центрі */}
+      <WorksMarquee />
 
       <Footer />
     </HomeWrapper>

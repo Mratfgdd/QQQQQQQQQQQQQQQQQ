@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+
+  "buildCommand": "CI=false GENERATE_SOURCEMAP=false NODE_OPTIONS=--openssl-legacy-provider npx react-scripts build",
+  "outputDirectory": "build",
+
+  "rewrites": [
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ]
+}

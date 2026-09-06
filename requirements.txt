@@ -1,0 +1,25 @@
+# Залежності serverless-функції на Vercel (api/index.py).
+# Vercel шукає requirements.txt саме в корені проєкту.
+#
+# Список має збігатися з backend/requirements.txt — це той самий застосунок,
+# просто запущений в іншому середовищі.
+
+fastapi>=0.115
+sqlalchemy>=2.0
+pydantic>=2.7
+python-multipart>=0.0.9
+bcrypt>=4.1
+PyJWT>=2.8
+
+# Клієнт до API Нової пошти. Раніше його не було в списку, хоча
+# app/routers/delivery.py його імпортує, — на чистому хостингу бекенд
+# впав би одразу на старті з ModuleNotFoundError.
+httpx>=0.27
+
+# Драйвер Postgres. Локально використовується SQLite і цей пакет не
+# потрібен, але в проді база хмарна (Neon / Vercel Postgres / Supabase),
+# бо файлову систему serverless не переживає.
+psycopg[binary]>=3.1
+
+# uvicorn у проді не потрібен: ASGI-застосунок запускає рантайм Vercel.
+# Для локального запуску він є в backend/requirements.txt.

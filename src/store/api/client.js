@@ -9,15 +9,38 @@
  * localhost:8000, де піднімається бекенд у режимі розробки.
  */
 
-export const API_URL = (
-  process.env.REACT_APP_API_URL || 'http://localhost:8000'
-).replace(/\/$/, '');
+/**
+ * Базова адреса API.
+ *
+ * У продакшн-збірці REACT_APP_API_URL порожній (див. .env.production):
+ * фронтенд і бекенд на Vercel живуть на одному домені, тому запити йдуть
+ * відносними шляхами й самі потрапляють на потрібний хост. localhost у
+ * продакшн-бандл не потрапляє.
+ *
+ * Увага на перевірку: саме `=== undefined`, а не `||`. Порожній рядок —
+ * це валідне й осмислене значення «той самий домен», і з `||` він
+ * помилково підмінявся б на localhost.
+ */
+const RAW_API_URL =
+  process.env.REACT_APP_API_URL === undefined
+    ? 'http://localhost:8000'
+    : process.env.REACT_APP_API_URL;
 
-/** Абсолютна адреса файлу: /uploads/... лежить на бекенді, /photo.jpg — у public */
+export const API_URL = RAW_API_URL.replace(/\/$/, '');
+
+/**
+ * Абсолютна адреса файлу.
+ *
+ * /api/files/... — завантажене адміністратором зображення (лежить у базі),
+ * /uploads/...   — те саме, але зі старих часів, коли файли писались на диск,
+ * /photo.jpg     — файл із public/, його віддає сам фронтенд.
+ */
 export const mediaUrl = url => {
   if (!url) return '';
   if (/^https?:\/\//i.test(url)) return url;
-  if (url.indexOf('/uploads/') === 0) return API_URL + url;
+  if (url.indexOf('/uploads/') === 0 || url.indexOf('/api/files/') === 0) {
+    return API_URL + url;
+  }
   return url;
 };
 

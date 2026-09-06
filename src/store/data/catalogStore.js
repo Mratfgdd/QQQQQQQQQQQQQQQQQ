@@ -47,7 +47,12 @@ const buildFromApi = payload => {
         categorySlug: category.slug,
         categoryTitle: category.title,
         inStock: product.in_stock,
-        isPopular: product.is_popular
+        isPopular: product.is_popular,
+        /* Поля для сортування каталогу: повна назва, дата появи
+           та порядок, заданий адміністратором */
+        title: product.title,
+        createdAt: product.created_at || '',
+        position: product.position || 0
       };
 
       /* Якщо адміністратор не заповнив дворядковий заголовок —
@@ -76,6 +81,11 @@ const buildFromApi = payload => {
       title: category.title,
       breadcrumb: category.breadcrumb || category.title,
       subtitle: category.subtitle || '',
+      /* Прев'ю для картки категорії на головній. Раніше це поле тут
+         губилося: воно є і в базі, і у відповіді API, але buildFromApi
+         його не переносив, тому змінити фото категорії з адмінки було
+         неможливо — головна показувала захардкоджені файли. */
+      image: mediaUrl(category.image || ''),
       products: cards
     };
   });
@@ -92,8 +102,29 @@ export const useCatalog = create(set => ({
   source: 'static',
   loaded: false,
 
+  /**
+   * Стан завантаження каталогу з бекенда.
+   *
+   *   'loading' — відповіді ще немає, показуємо статичний фолбек;
+   *   'ready'   — каталог прийшов із бази, у сторі повний список категорій;
+   *   'error'   — бекенд недоступний, живемо на статиці.
+   *
+   * Це потрібно сторінці категорії: поки статус 'loading', вона НЕ має
+   * права сказати «категорію не знайдено» — категорії, доданої в адмінці,
+   * у статичному фолбеку немає за визначенням.
+   */
+  status: 'loading',
+
   applyApiCatalog: payload =>
-    set(Object.assign(buildFromApi(payload), { source: 'api', loaded: true }))
+    set(
+      Object.assign(buildFromApi(payload), {
+        source: 'api',
+        loaded: true,
+        status: 'ready'
+      })
+    ),
+
+  markCatalogFailed: () => set({ status: 'error' })
 }));
 
 /** Підтягує каталог. Помилка мережі не критична — лишаємось на статиці. */
@@ -104,9 +135,13 @@ export async function loadCatalog() {
     const categories = await apiFetch('/api/categories', { cache: 'no-store' });
     if (Array.isArray(categories) && categories.length) {
       useCatalog.getState().applyApiCatalog(categories);
+    } else {
+      /* Бекенд відповів, але каталог порожній — далі чекати немає чого */
+      useCatalog.getState().markCatalogFailed();
     }
   } catch (error) {
     /* Бекенд не піднято — лишаємося на статичних даних */
+    useCatalog.getState().markCatalogFailed();
   }
 }
 

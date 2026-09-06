@@ -14,7 +14,13 @@ import jwt
 from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
-from .config import COOKIE_NAME, SECRET_KEY, TOKEN_TTL_HOURS
+from .config import (
+    COOKIE_NAME,
+    COOKIE_SAMESITE,
+    COOKIE_SECURE,
+    SECRET_KEY,
+    TOKEN_TTL_HOURS,
+)
 from .database import get_db
 from .models import AdminUser
 
@@ -49,10 +55,10 @@ def set_session_cookie(response, token: str) -> None:
         key=COOKIE_NAME,
         value=token,
         httponly=True,
-        samesite="lax",
-        # secure=True вмикається на проді за HTTPS; локально по http кука
-        # з secure не долетіла б до браузера
-        secure=False,
+        # На проді (різні домени) потрібні samesite="none" + secure=True,
+        # локально — lax + secure=False. Керується змінними середовища.
+        samesite=COOKIE_SAMESITE,
+        secure=COOKIE_SECURE,
         max_age=TOKEN_TTL_HOURS * 3600,
         path="/",
     )

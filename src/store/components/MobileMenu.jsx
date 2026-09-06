@@ -164,6 +164,9 @@ const MenuList = styled.nav`
 
 const MenuItem = styled.button`
   appearance: none;
+  /* background ОБОВ'ЯЗКОВО задаємо явно: коли елемент рендериться як
+     <button>, браузер інакше підставляє власне світле тло (ButtonFace),
+     і пункт перетворюється на білий прямокутник посеред темного меню. */
   background: transparent;
   border: none;
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
@@ -177,12 +180,13 @@ const MenuItem = styled.button`
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  cursor: pointer;
+  cursor: ${props => (props.$static ? 'default' : 'pointer')};
   width: 100%;
+  box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
 
   &:active {
-    background: rgba(255, 255, 255, 0.05);
+    background: ${props => (props.$static ? 'transparent' : 'rgba(255, 255, 255, 0.05)')};
   }
 
   .chevron {
@@ -210,34 +214,6 @@ const MenuItem = styled.button`
     display: flex;
     align-items: center;
     min-width: 0;
-  }
-`;
-
-const InfoRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 44px;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.78);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-
-  .icon-box {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 22px;
-    flex-shrink: 0;
-    color: #ffffff;
-    opacity: 0.8;
-
-    svg {
-      stroke: currentColor;
-      fill: none;
-      stroke-width: 1.5;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
   }
 `;
 
@@ -305,8 +281,10 @@ const ThemeRow = styled.div`
 /**
  * @param {boolean}  isOpen
  * @param {Function} onClose
- * @param {Array}    links     [{ label, onClick }]
- * @param {Array}    info      [{ label, icon }]   — нелінковані пункти (як на десктопі)
+ * @param {Array}    links     [{ label, badge, onClick }]
+ * @param {Array}    info      [{ label, onClick }] — секція «Сервіс».
+ *                             Малюється тим самим MenuItem, що й навігація,
+ *                             тому виглядає як звичайний пункт меню.
  * @param {Array}    contacts  [{ label, value, href }]
  * @param {Object}   cta       { label, onClick }
  */
@@ -382,14 +360,20 @@ export default function MobileMenu({
         {info.length > 0 && (
           <React.Fragment>
             <SectionTitle>Сервіс</SectionTitle>
-            <div>
+            <MenuList>
               {info.map(item => (
-                <InfoRow key={item.label}>
-                  {item.icon && <span className="icon-box">{item.icon}</span>}
-                  <span>{item.label}</span>
-                </InfoRow>
+                <MenuItem
+                  key={item.label}
+                  as={item.onClick ? 'button' : 'div'}
+                  type={item.onClick ? 'button' : undefined}
+                  onClick={item.onClick ? handleNavigate(item.onClick) : undefined}
+                  $static={!item.onClick}
+                >
+                  <span className="label-row">{item.label}</span>
+                  {item.onClick && <span className="chevron">›</span>}
+                </MenuItem>
               ))}
-            </div>
+            </MenuList>
           </React.Fragment>
         )}
 
